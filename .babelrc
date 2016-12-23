@@ -1,0 +1,20 @@
+{
+  "plugins": [
+    ["transform-flow-strip-types"]
+  ],
+  "env": {
+    "cjs": {
+      "presets": [
+        ["es2015", {"loose": true}]
+      ],
+      "plugins": [
+        ["add-module-exports"]
+      ]
+    },
+    "es": {
+      "presets": [
+        ["es2015", {"loose": true, "modules": false}]
+      ]
+    }
+  }
+}
