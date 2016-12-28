@@ -3,8 +3,8 @@
 const MerkleBTree = require(`../cjs/MerkleBTree`);
 
 describe(`merkle-btree`, () => {
-  const testEntryCount = 200;
-  const maxChildren = 13;
+  const testEntryCount = 10000;
+  const maxChildren = 10;
   const btree = new MerkleBTree(maxChildren);
   const satoshi = {
     name: `Satoshi Nakamoto`,
@@ -29,10 +29,7 @@ describe(`merkle-btree`, () => {
 
   it(`can store lots of keys`, () => {
     for (let i = 0; i < testEntryCount; i++) {
-      let sizeBefore = btree.size();
       btree.put(`Satoshi ${i}`, Object.assign({}, satoshi, {n: i}));
-      let sizeAfter = btree.size();
-      expect(sizeAfter).toBeGreaterThan(sizeBefore);
     }
     // console.log(btree.print());
   });

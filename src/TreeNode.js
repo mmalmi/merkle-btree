@@ -14,7 +14,7 @@ class TreeNode {
   constructor(leftChildHash, keys = [], hash) {
     this.hash = hash;
     this.leftChildHash = leftChildHash;
-    this.keys = keys.sort((a, b) => a.key.localeCompare(b.key));
+    this.keys = keys;
     const zero = new KeyElement(``, null, leftChildHash);
     if (!this.keys.length || this.keys[0].key.length) {
       this.keys.unshift(zero);
@@ -76,6 +76,7 @@ class TreeNode {
     const rightChildHash = storage.put(rightChild.serialize());
     const rightChildElement = new KeyElement(median.key, null, rightChildHash);
 
+    storage.remove(this.hash);
     return new TreeNode(leftChildHash, [rightChildElement]);
   }
 
@@ -84,6 +85,7 @@ class TreeNode {
     const {leafInsertIndex, exists} = this._getLeafInsertIndex(key);
     if (exists) {
       this.keys[leafInsertIndex] = keyElement;
+      storage.remove(this.hash);
       const hash = storage.put(this.serialize());
       return new TreeNode(this.leftChildHash, this.keys, hash);
     }
@@ -91,6 +93,7 @@ class TreeNode {
     this.keys.splice(leafInsertIndex, 0, keyElement);
     if (this.keys.length < maxChildren) {
       // Add the value and commit this node to storage
+      storage.remove(this.hash);
       const hash = storage.put(this.serialize());
       return new TreeNode(this.leftChildHash, this.keys, hash);
     }
@@ -106,10 +109,10 @@ class TreeNode {
     if (!modifiedChild.hash) {
       // we split a child and need to add the median to our keys
       this.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
-      this.keys.push(modifiedChild.keys[modifiedChild.keys.length - 1]);
-      this.keys = this.keys.sort((a, b) => a.key.localeCompare(b.key));
+      this.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
 
       if (this.keys.length < maxChildren) {
+        storage.remove(this.hash);
         const hash = storage.put(this.serialize());
         return new TreeNode(this.leftChildHash, this.keys, hash);
       }
@@ -117,6 +120,7 @@ class TreeNode {
     }
     // The child element was not split
     this.keys[index] = new KeyElement(this.keys[index].key, null, modifiedChild.hash);
+    storage.remove(this.hash);
     const hash = storage.put(this.serialize());
     return new TreeNode(this.leftChildHash, this.keys, hash);
   }
