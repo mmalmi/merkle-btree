@@ -1,4 +1,4 @@
-const crypto = require(`crypto`);
+import {createHash} from 'crypto';
 
 class RAMStorage {
   constructor() {
@@ -6,7 +6,7 @@ class RAMStorage {
   }
 
   put(value) {
-    const sha256 = crypto.createHash(`sha256`);
+    const sha256 = createHash(`sha256`);
     sha256.update(value);
     const hash = sha256.digest(`base64`);
     this.storage[hash] = value;

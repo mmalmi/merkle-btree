@@ -1,3 +1,5 @@
+'use strict';
+
 const MerkleBTree = require(`../cjs/MerkleBTree`);
 
 describe(`merkle-btree`, () => {

@@ -1,5 +1,5 @@
-const TreeNode = require(`./TreeNode`);
-const RAMStorage = require(`./RAMStorage`);
+import TreeNode from './TreeNode';
+import RAMStorage from './RAMStorage';
 
 class MerkleBTree {
   constructor(maxChildren = 10, storage = new RAMStorage(), rootNode = new TreeNode()) {
