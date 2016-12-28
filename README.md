@@ -6,6 +6,9 @@
 [![David](https://img.shields.io/david/mmalmi/merkle-btree.svg?style=flat-square)](https://david-dm.org/mmalmi/merkle-btree)
 [![Travis](https://img.shields.io/travis/mmalmi/merkle-btree/master.svg?style=flat-square)](https://travis-ci.org/mmalmi/merkle-btree)
 
+### Description
+Based on https://github.com/ianopolous/merkle-btree. Project template created with [generator-module-boilerplate](https://github.com/duivvv/generator-module-boilerplate).
+
 ### Installation
 
 Install via [yarn](https://github.com/yarnpkg/yarn)
