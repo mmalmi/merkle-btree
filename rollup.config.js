@@ -3,9 +3,16 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from 'rollup-plugin-commonjs';
-import path from 'path';
+import includePaths from 'rollup-plugin-includepaths';
 
 const name = `merkleBtree`;
+
+const includePathOptions = {
+    include: {},
+    paths: ['src'],
+    external: [],
+    extensions: ['.js']
+};
 
 const plugins = [
   babel(),
@@ -16,7 +23,8 @@ const plugins = [
   commonjs({
     include: `node_modules/**`
   }),
-  bundleSize()
+  bundleSize(),
+  includePaths(includePathOptions)
 ];
 
 const isProd = process.env.NODE_ENV === `production`;
@@ -27,9 +35,5 @@ export default {
   plugins,
   dest: `dist/${name}${isProd ? `.min` : ``}.js`,
   moduleName: name,
-  format: `umd`,
-  external: [
-    path.resolve('src/TreeNode.js'),
-    path.resolve('src/RAMStorage.js')
-  ]
+  format: `umd`
 };
