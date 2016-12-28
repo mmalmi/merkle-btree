@@ -1,11 +1,11 @@
 'use strict';
 
 const MerkleBTree = require(`../cjs/MerkleBTree`);
+const IPFSStorage = require(`../cjs/IPFSStorage`);
+const IPFS = require(`ipfs`);
 
-describe(`merkle-btree`, () => {
-  const testEntryCount = 10000;
-  const maxChildren = 10;
-  const btree = new MerkleBTree(maxChildren);
+function runTests(testEntryCount, maxChildren, storage) {
+  const btree = new MerkleBTree(maxChildren, storage);
   const satoshi = {
     name: `Satoshi Nakamoto`,
     email: `satoshin@gmx.com`,
@@ -14,17 +14,24 @@ describe(`merkle-btree`, () => {
   let hash;
 
   it(`inserts a value and returns a hash`, () => {
-    hash = btree.put(`Satoshi`, satoshi);
-    expect(typeof hash).toBe(`string`);
+    return btree.put(`Satoshi`, satoshi)
+      .then(hash => {
+        expect(typeof hash).toBe(`string`);
+      });
   });
 
   it(`returns the inserted value`, () => {
-    const satoshi2 = btree.get(`Satoshi`);
-    expect(satoshi2).toEqual(satoshi);
+    return btree.get(`Satoshi`)
+      .then(res => {
+        expect(res).toEqual(satoshi);
+      });
   });
 
   it(`returns null when the value is not found`, () => {
-    expect(btree.get(`Hal`)).toBeNull();
+    return btree.get(`Hal`)
+      .then(res => {
+        expect(res).toBeNull();
+      });
   });
 
   it(`can store lots of keys`, () => {
@@ -50,4 +57,22 @@ describe(`merkle-btree`, () => {
       expect(satoshiN).toEqual(Object.assign({}, satoshi, {n: i}));
     }
   });
+}
+
+describe(`merkle-btree`, () => {
+  describe(`RAMStorage`, () => {
+    const testEntryCount = 10000;
+    const maxChildren = 10;
+    runTests(testEntryCount, maxChildren);
+  });
+
+  /*
+  describe(`IPFSStorage`, () => {
+    const ipfsNode = new IPFS();
+    const storage = new IPFSStorage(ipfsNode);
+    const testEntryCount = 100;
+    const maxChildren = 10;
+    runTests(testEntryCount, maxChildren, storage);
+  });
+  */
 });
