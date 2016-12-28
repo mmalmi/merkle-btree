@@ -30,6 +30,7 @@
     "prepublish": "npm run build",
     "release": "release-it",
     "lint": "npm run lint:eslint && npm run lint:flow",
+    "lint:test": "npm run lint && npm run test:coverage",
     "lint:eslint": "eslint src/*.js",
     "lint:flow": "flow --color always",
     "lint:build": "npm run lint && npm run build:cjs -s",
