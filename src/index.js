@@ -1,6 +1,6 @@
-import * as MerkleBTree from './MerkleBtree';
-import * as TreeNode from './TreeNode';
-import * as RAMStorage from './RAMStorage';
+import MerkleBTree from './MerkleBtree';
+import TreeNode from './TreeNode';
+import RAMStorage from './RAMStorage';
 
 exports.MerkleBTree = MerkleBTree;
 exports.TreeNode = TreeNode;
