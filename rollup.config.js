@@ -3,16 +3,8 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from 'rollup-plugin-commonjs';
-import includePaths from 'rollup-plugin-includepaths';
 
 const name = `merkleBtree`;
-
-const includePathOptions = {
-    include: {},
-    paths: ['src'],
-    external: [],
-    extensions: ['.js']
-};
 
 const plugins = [
   babel(),
@@ -23,8 +15,7 @@ const plugins = [
   commonjs({
     include: `node_modules/**`
   }),
-  bundleSize(),
-  includePaths(includePathOptions)
+  bundleSize()
 ];
 
 const isProd = process.env.NODE_ENV === `production`;
