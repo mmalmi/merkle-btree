@@ -1,12 +1,11 @@
+import promises from 'es6-promise';
+promises.polyfill();
+
 class KeyElement {
   constructor(key, valueHash, targetHash) {
     this.key = key;
     this.valueHash = valueHash;
     this.targetHash = targetHash;
-  }
-
-  equals(el2) {
-    return this.key === el2.key && this.valueHash === el2.valueHash && this.targetHash === el2.targetHash;
   }
 }
 
@@ -30,12 +29,15 @@ class TreeNode {
       nextKey = k;
     }
     if (nextKey.targetHash) {
-      return TreeNode.deserialize(storage.get(nextKey.targetHash), nextKey.targetHash).get(key, storage);
+      return storage.get(nextKey.targetHash)
+        .then(serialized => {
+          return TreeNode.deserialize(serialized, nextKey.targetHash).get(key, storage);
+        });
     }
     if (nextKey.key === key) {
-      return nextKey.valueHash;
+      return Promise.resolve(nextKey.valueHash);
     }
-    return null; // not found
+    return Promise.resolve(null); // not found
   }
 
   _getLeafInsertIndex(key) {
@@ -66,18 +68,21 @@ class TreeNode {
     const medianIndex = Math.floor(this.keys.length / 2);
     const median = this.keys[medianIndex];
     const leftChild = new TreeNode(null, this.keys.slice(0, medianIndex));
-    const leftChildHash = storage.put(leftChild.serialize());
+    const putLeftChild = storage.put(leftChild.serialize());
 
     const rightSet = this.keys.slice(medianIndex, this.keys.length);
     if (this.keys[0].targetHash) { // branch node
       rightSet.shift();
     }
     const rightChild = new TreeNode(this.keys[medianIndex].targetHash, rightSet);
-    const rightChildHash = storage.put(rightChild.serialize());
-    const rightChildElement = new KeyElement(median.key, null, rightChildHash);
+    const putRightChild = storage.put(rightChild.serialize());
 
-    storage.remove(this.hash);
-    return new TreeNode(leftChildHash, [rightChildElement]);
+    const remove = storage.remove(this.hash);
+    return Promise.all([putLeftChild, putRightChild, remove])
+      .then(([leftChildHash, rightChildHash]) => {
+        const rightChildElement = new KeyElement(median.key, null, rightChildHash);
+        return new TreeNode(leftChildHash, [rightChildElement]);
+      });
   }
 
   _saveToLeafNode(key, value, storage, maxChildren) {
@@ -85,17 +90,24 @@ class TreeNode {
     const {leafInsertIndex, exists} = this._getLeafInsertIndex(key);
     if (exists) {
       this.keys[leafInsertIndex] = keyElement;
-      storage.remove(this.hash);
-      const hash = storage.put(this.serialize());
-      return new TreeNode(this.leftChildHash, this.keys, hash);
+      return storage.remove(this.hash)
+        .then(() => {
+          return storage.put(this.serialize());
+        })
+        .then(hash => {
+          return new TreeNode(this.leftChildHash, this.keys, hash);
+        });
     }
 
     this.keys.splice(leafInsertIndex, 0, keyElement);
     if (this.keys.length < maxChildren) {
-      // Add the value and commit this node to storage
-      storage.remove(this.hash);
-      const hash = storage.put(this.serialize());
-      return new TreeNode(this.leftChildHash, this.keys, hash);
+      return storage.remove(this.hash)
+        .then(() => {
+          return storage.put(this.serialize());
+        })
+        .then(hash => {
+          return new TreeNode(this.leftChildHash, this.keys, hash);
+        });
     }
     return this._splitNode(storage);
   }
@@ -103,26 +115,31 @@ class TreeNode {
   _saveToBranchNode(key, value, storage, maxChildren) {
     const {index} = this._getNextSmallestIndex(key);
     const nextSmallest = this.keys[index];
-    const modifiedChild = TreeNode.deserialize(storage.get(nextSmallest.targetHash), nextSmallest.targetHash)
-      .put(key, value, storage, maxChildren);
+    return storage.get(nextSmallest.targetHash)
+      .then(serialized => {
+        return TreeNode.deserialize(serialized, nextSmallest.targetHash).put(key, value, storage, maxChildren);
+      })
+      .then(modifiedChild => {
+        if (!modifiedChild.hash) {
+          // we split a child and need to add the median to our keys
+          this.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
+          this.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
 
-    if (!modifiedChild.hash) {
-      // we split a child and need to add the median to our keys
-      this.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
-      this.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
-
-      if (this.keys.length < maxChildren) {
+          if (this.keys.length < maxChildren) {
+            storage.remove(this.hash);
+            return storage.put(this.serialize()).then(hash => {
+              return new TreeNode(this.leftChildHash, this.keys, hash);
+            });
+          }
+          return this._splitNode(storage);
+        }
+        // The child element was not split
+        this.keys[index] = new KeyElement(this.keys[index].key, null, modifiedChild.hash);
         storage.remove(this.hash);
-        const hash = storage.put(this.serialize());
-        return new TreeNode(this.leftChildHash, this.keys, hash);
-      }
-      return this._splitNode(storage);
-    }
-    // The child element was not split
-    this.keys[index] = new KeyElement(this.keys[index].key, null, modifiedChild.hash);
-    storage.remove(this.hash);
-    const hash = storage.put(this.serialize());
-    return new TreeNode(this.leftChildHash, this.keys, hash);
+        return storage.put(this.serialize()).then(hash => {
+          return new TreeNode(this.leftChildHash, this.keys, hash);
+        });
+      });
   }
 
   put(key, value, storage, maxChildren): TreeNode {
@@ -144,13 +161,18 @@ class TreeNode {
   }
 
   size(storage) {
-    let total = 0;
-    this.keys.forEach(key => {
-      if (key.targetHash) {
-        total += TreeNode.deserialize(storage.get(key.targetHash)).size(storage);      }
-    });
-    total += this.keys.length;
-    return total;
+    return this.keys.reduce((promise, key) => {
+      return promise.then(size => {
+        if (key.targetHash) {
+          return storage.get(key.targetHash)
+            .then(serialized => {
+              return TreeNode.deserialize(serialized).size(storage);
+            })
+            .then(childSize => { return childSize + size; });
+        }
+        return size;
+      });
+    }, Promise.resolve(this.keys.length));
   }
 
   smallestKey() {

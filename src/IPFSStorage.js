@@ -4,21 +4,38 @@ class IPFSStorage {
   }
 
   put(value) {
-    return this.ipfs.files.add(value).then(res => {
-      return res.Hash;
+    return this.ipfs.files.add(new Buffer(value, `utf8`)).then(res => {
+      return res[0].hash;
     });
   }
 
   get(key) {
-    return this.ipfs.files.cat(key, {buffer: true});
+    return this.ipfs.files.cat(key)
+      .then(stream => {
+        return new Promise((resolve, reject) => {
+          let res = ``;
+
+          stream.on(`data`, function (chunk) {
+            res += chunk.toString();
+          });
+
+          stream.on(`error`, function (err) {
+            reject(err);
+          });
+
+          stream.on(`end`, function () {
+            resolve(res);
+          });
+        });
+      });
   }
 
   remove(key) {
-    return key;
+    return Promise.resolve(key);
   }
 
   clear() {
-    return null;
+    return Promise.resolve();
   }
 }
 

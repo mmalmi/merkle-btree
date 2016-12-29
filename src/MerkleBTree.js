@@ -13,15 +13,23 @@ class MerkleBTree {
   }
 
   put(key, value) {
-    const newRoot = this.rootNode.put(key, value, this.storage, this.maxChildren);
-    const newHash = this.storage.put(newRoot.serialize());
-    this.rootNode = new TreeNode(newRoot.leftChildHash, newRoot.keys, newHash);
-    return this.rootNode.hash;
+    return this.rootNode.put(key, value, this.storage, this.maxChildren)
+      .then(newRoot => {
+        this.rootNode = newRoot;
+        return this.storage.put(newRoot.serialize());
+      })
+      .then(newHash => {
+        this.rootNode = new TreeNode(this.rootNode.leftChildHash, this.rootNode.keys, newHash);
+        return newHash;
+      });
   }
 
   delete(key) {
-    this.rootNode = this.rootNode.delete(key, this.storage, this.maxChildren);
-    return this.rootNode.hash;
+    return this.rootNode.delete(key, this.storage, this.maxChildren)
+      .then(newRoot => {
+        this.rootNode = newRoot;
+        return newRoot.hash;
+      });
   }
 
   print() {
