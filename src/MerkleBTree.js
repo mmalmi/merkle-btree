@@ -2,7 +2,7 @@ import TreeNode from './TreeNode';
 import RAMStorage from './RAMStorage';
 
 class MerkleBTree {
-  constructor(maxChildren = 10, storage = new RAMStorage(), rootNode = new TreeNode()) {
+  constructor(storage = new RAMStorage(), maxChildren = 10, rootNode = new TreeNode()) {
     this.rootNode = rootNode;
     this.storage = storage;
     this.maxChildren = Math.max(maxChildren, 2);
@@ -39,6 +39,14 @@ class MerkleBTree {
   /* Return number of keys stored in tree */
   size() {
     return this.rootNode.size(this.storage);
+  }
+
+  static getByHash(hash, storage, maxChildren) {
+    // TODO: guess maxChildren from tree?
+    return storage.get(hash).then(data => {
+      const rootNode = TreeNode.deserialize(data);
+      return new MerkleBTree(storage, maxChildren, rootNode);
+    });
   }
 }
 

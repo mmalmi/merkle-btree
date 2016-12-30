@@ -2,9 +2,9 @@ import promises from 'es6-promise';
 promises.polyfill();
 
 class KeyElement {
-  constructor(key, valueHash, targetHash) {
+  constructor(key, value, targetHash) {
     this.key = key;
-    this.valueHash = valueHash;
+    this.value = value;
     this.targetHash = targetHash;
   }
 }
@@ -35,7 +35,7 @@ class TreeNode {
         });
     }
     if (nextKey.key === key) {
-      return Promise.resolve(nextKey.valueHash);
+      return Promise.resolve(nextKey.value);
     }
     return Promise.resolve(null); // not found
   }
@@ -203,8 +203,8 @@ class TreeNode {
       if (key.targetHash) {
         str += ` link: ${key.targetHash}`;
       }
-      if (key.valueHash) {
-        str += `\n${indentation}   value: ${JSON.stringify(key.valueHash)}`;
+      if (key.value) {
+        str += `\n${indentation}   value: ${JSON.stringify(key.value)}`;
       }
       str += `\n`;
     });
