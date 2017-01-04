@@ -10,7 +10,8 @@ const plugins = [
   babel(),
   nodeResolve({
     module: true,
-    jsnext: true
+    jsnext: true,
+    skip: ['debug']
   }),
   commonjs({
     include: `node_modules/**`

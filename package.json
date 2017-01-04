@@ -76,6 +76,6 @@
   },
   "dependencies": {
     "es6-promise": "^4.0.5",
-    "request": "^2.79.0"
+    "simple-get": "^2.3.0"
   }
 }

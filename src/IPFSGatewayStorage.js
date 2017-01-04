@@ -1,4 +1,4 @@
-import {get} from 'request';
+import simpleGet from 'simple-get';
 
 class IPFSGatewayStorage {
   constructor(apiRoot = ``) {
@@ -10,7 +10,7 @@ class IPFSGatewayStorage {
       if (!key.match(/^\/ip(fs|ns)\//)) {
         key = `/ipfs/${key}`;
       }
-      get(this.apiRoot + key, (error, response, body) => {
+      simpleGet.concat(this.apiRoot + key, (error, response, body) => {
         if (error) { reject(error); }
         resolve(body);
       });

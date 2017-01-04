@@ -5,7 +5,7 @@ const IPFSStorage = require(`../cjs/IPFSStorage`);
 const IPFSGatewayStorage = require(`../cjs/IPFSGatewayStorage`);
 const IpfsLib = require(`ipfs`);
 const ipfs = new IpfsLib();
-const server = require('express')();
+const expressApp = require('express')();
 let rootHash;
 const satoshi = {
   name: `Satoshi Nakamoto`,
@@ -128,12 +128,12 @@ describe(`merkle-btree`, () => {
   });
 
   describe(`IPFSGatewayStorage`, () => {
-    let btree;
+    let btree, server;
     const storage = new IPFSGatewayStorage('http://localhost:8080');
 
     beforeAll(done => {
       // Set up ipfs file gateway
-      server.get('/ipfs/:hash', function(req, res) {
+      expressApp.get('/ipfs/:hash', function(req, res) {
         ipfs.files.cat(req.params.hash)
         .then(function(stream) {
           stream.pipe(res);
@@ -142,7 +142,7 @@ describe(`merkle-btree`, () => {
           res.status(404).json("not found");
         });
       });
-      server.listen(8080, 'localhost');
+      server = expressApp.listen(8080, 'localhost');
       return MerkleBTree.getByHash(rootHash, storage).then(res => {
         btree = res;
         done();
