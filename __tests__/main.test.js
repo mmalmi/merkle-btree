@@ -72,7 +72,6 @@ function runTests(testEntryCount, maxChildren, btree) {
       }
       return btree.get(`Satoshi ${i}`)
         .then(function(satoshiN) {
-          // console.log(`yess ${i}`);
           expect(satoshiN).toEqual(Object.assign({}, satoshi, {n: i}));
           return iterate(i - 1);
         });
@@ -116,7 +115,7 @@ describe(`merkle-btree`, () => {
           loadIpfs();
         } else {
           ipfs.init({ emptyRepo: true, bits: 2048 }, function(err) {
-            log(`IPFS repo was initialized`);
+            console.log(`IPFS repo was initialized`);
             if (err) { throw err; }
             loadIpfs();
           });
@@ -181,7 +180,6 @@ describe(`merkle-btree`, () => {
         }
         return btree.get(`Satoshi ${i}`)
           .then(function(satoshiN) {
-            // console.log(`yess ${i}`);
             expect(satoshiN).toEqual(Object.assign({}, satoshi, {n: i}));
             return iterate(i - 1);
           });
