@@ -28,11 +28,16 @@ The `merkle-btree` package includes precompiled production and development [UMD]
 
 ### Usage
 
-### setup
-
 ```js
 
-import merkleBtree from 'merkle-btree';
+var ipfsAPI = require('ipfs-api');
+var ipfs = ipfsAPI('localhost', '5001', {protocol: 'http'});
+var lib = require('merkle-btree');
+var storage = new lib.IPFSStorage(ipfs);
+var tree = new lib.MerkleBTree(storage);
+
+tree.put('key', 'value').then(console.log); // outputs tree IPFS file hash after inserting key
+tree.get('key').then(console.log); // outputs 'value'
 
 ```
 
