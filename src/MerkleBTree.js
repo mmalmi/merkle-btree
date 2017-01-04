@@ -12,6 +12,10 @@ class MerkleBTree {
     return this.rootNode.get(key, this.storage);
   }
 
+  search(query, limit) {
+    return this.rootNode.search(query, limit, this.storage);
+  }
+
   put(key, value) {
     return this.rootNode.put(key, value, this.storage, this.maxChildren)
       .then(newRoot => {

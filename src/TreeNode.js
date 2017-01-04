@@ -40,6 +40,51 @@ class TreeNode {
     return Promise.resolve(null); // not found
   }
 
+  // Returns multiple matches
+  search(query, limit = 100, storage) {
+    let matches = [];
+    const _this = this;
+
+    function iterate(i) {
+      if (i >= _this.keys.length) {
+        return Promise.resolve(matches);
+      }
+      if (limit && matches.length >= limit) {
+        matches = matches.slice(0, limit);
+        return Promise.resolve(matches);
+      }
+
+      const k = _this.keys[i];
+      if (i + 1 < _this.keys.length) {
+        if (k.key > _this.keys[i + 1].key) { // search only nodes whose keys are in the query range
+          return iterate(i + 1);
+        }
+      }
+      if (query < k.key && k.key.substring(0, query.length) !== query) {
+        return Promise.resolve(matches);
+      }
+      if (k.targetHash) { // branch node
+        return storage.get(k.targetHash)
+          .then(serialized => {
+            return TreeNode.deserialize(serialized, k.targetHash).search(query, limit, storage);
+          })
+          .then(m => {
+            if (m) {
+              matches = matches.concat(m);
+            }
+            return iterate(i + 1);
+          });
+      }
+      // leaf node
+      if (k.key.substring(0, query.length) === query) { // leaf node with matching key
+        matches.push({key: k.key, value: k.value});
+      }
+      return iterate(i + 1);
+    }
+
+    return iterate(0);
+  }
+
   _getLeafInsertIndex(key) {
     const {index, exists} = this._getNextSmallestIndex(key);
     let leafInsertIndex = index + 1;

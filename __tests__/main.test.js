@@ -79,6 +79,13 @@ function runTests(testEntryCount, maxChildren, btree) {
     }
     return iterate(testEntryCount);
   });
+
+  it(`can search by key`, () => {
+    return btree.search(`Satoshi 1`)
+      .then(res => {
+        expect(res.length).toBeGreaterThan(testEntryCount / 20);
+      });
+  });
 }
 
 describe(`merkle-btree`, () => {
