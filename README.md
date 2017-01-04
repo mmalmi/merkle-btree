@@ -37,7 +37,8 @@ var storage = new lib.IPFSStorage(ipfs);
 var tree = new lib.MerkleBTree(storage);
 
 tree.put('key', 'value').then(console.log); // outputs tree IPFS file hash after inserting key
-tree.get('key').then(console.log); // outputs 'value'
+tree.get('key').then(console.log); // 'value'
+tree.search('k').then(console.log); // [ { key: 'key', value: 'value' } ]
 
 ```
 
