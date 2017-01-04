@@ -11,6 +11,7 @@ const plugins = [
   nodeResolve({
     module: true,
     jsnext: true,
+    browser: true,
     skip: ['debug']
   }),
   commonjs({
