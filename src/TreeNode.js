@@ -1,6 +1,3 @@
-import promises from 'es6-promise';
-promises.polyfill();
-
 class KeyElement {
   constructor(key, value, targetHash) {
     this.key = key;

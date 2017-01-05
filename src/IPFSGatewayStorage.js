@@ -1,4 +1,4 @@
-import simpleGet from 'simple-get';
+import * as simpleGet from 'simple-get';
 
 class IPFSGatewayStorage {
   constructor(apiRoot = ``) {

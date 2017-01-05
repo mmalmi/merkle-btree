@@ -1,6 +1,4 @@
 import {createHash} from 'crypto';
-import promises from 'es6-promise';
-promises.polyfill();
 
 class RAMStorage {
   constructor() {

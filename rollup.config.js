@@ -1,19 +1,16 @@
 import babel from 'rollup-plugin-babel';
-import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from 'rollup-plugin-commonjs';
+import builtins from 'rollup-plugin-node-builtins';
+import globals from 'rollup-plugin-node-globals';
 
 const name = `merkleBtree`;
 
 const plugins = [
   babel(),
-  nodeResolve({
-    module: true,
-    jsnext: true,
-    browser: true,
-    skip: ['debug']
-  }),
+  globals(),
+  builtins(),
   commonjs({
     include: `node_modules/**`
   }),
