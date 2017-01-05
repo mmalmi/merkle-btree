@@ -1,8 +1,7 @@
 import TreeNode from './TreeNode';
-import RAMStorage from './RAMStorage';
 
 class MerkleBTree {
-  constructor(storage = new RAMStorage(), maxChildren = 10, rootNode = new TreeNode()) {
+  constructor(storage, maxChildren = 10, rootNode = new TreeNode()) {
     this.rootNode = rootNode;
     this.storage = storage;
     this.maxChildren = Math.max(maxChildren, 2);

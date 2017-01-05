@@ -1,5 +1,6 @@
 'use strict';
 
+const RAMStorage = require('../cjs/RAMStorage');
 const MerkleBTree = require(`../cjs/MerkleBTree`);
 const IPFSStorage = require(`../cjs/IPFSStorage`);
 const IPFSGatewayStorage = require(`../cjs/IPFSGatewayStorage`);
@@ -94,7 +95,7 @@ describe(`merkle-btree`, () => {
   describe(`RAMStorage`, () => {
     const testEntryCount = 1000;
     const maxChildren = 10;
-    runTests(testEntryCount, maxChildren, new MerkleBTree(undefined, maxChildren));
+    runTests(testEntryCount, maxChildren, new MerkleBTree(new RAMStorage(), maxChildren));
   });
 
   describe(`IPFSStorage`, () => {
