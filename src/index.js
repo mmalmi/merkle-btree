@@ -3,7 +3,9 @@ import TreeNode from './TreeNode';
 import IPFSStorage from './IPFSStorage';
 import IPFSGatewayStorage from './IPFSGatewayStorage';
 
-exports.MerkleBTree = MerkleBTree;
-exports.TreeNode = TreeNode;
-exports.IPFSStorage = IPFSStorage;
-exports.IPFSGatewayStorage = IPFSGatewayStorage;
+export default {
+  MerkleBTree: MerkleBTree,
+  TreeNode: TreeNode,
+  IPFSStorage: IPFSStorage,
+  IPFSGatewayStorage: IPFSGatewayStorage
+};
