@@ -36,9 +36,18 @@ var lib = require('merkle-btree');
 var storage = new lib.IPFSStorage(ipfs);
 var tree = new lib.MerkleBTree(storage);
 
+// Store entries into a merkle tree on IPFS
 tree.put('key', 'value').then(console.log); // outputs tree IPFS file hash after inserting key
 tree.get('key').then(console.log); // 'value'
 tree.search('k').then(console.log); // [ { key: 'key', value: 'value' } ]
+
+// Read-only storage using an IPFS gateway - good for serverless browser apps
+var storage2 = new lib.IPFSGatewayStorage('https://ipfs.io');
+lib.MerkleBTree.getByHash('[insert tree hash]')
+.then(function(tree2) {
+  return tree2.get('key');
+})
+.then(console.log); // 'value'
 
 ```
 
