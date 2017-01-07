@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>Test</title>
+  <script src="../dist/MerkleBTree.js"></script>
+  <script type="text/javascript">
+  var storage = new window.merkleBtree.IPFSGatewayStorage('https://identi.fi');
+  var tree;
+  window.merkleBtree.MerkleBTree.getByHash('QmSHJWyrULXbSfzwcga2a3Nigwr6pga7dQhTAUQLijHrjN', storage)
+  .then(function(res) {
+    tree = res;
+    window.tree = tree;
+    console.log('Got merkle-btree', tree);
+    console.log('Searching for key6');
+    return tree.get('key6');
+  })
+  .then(function(res) {
+    console.log('Found key6:', res);
+    console.log('Text searching "k"');
+    return tree.search('k');
+  })
+  .then(function(res) {
+    console.log('Result:', res);
+  });
+
+  </script>
+</head>
+
+<body>
+  <h1>window.merkleBtree</h1>
+</body>
+</html>
