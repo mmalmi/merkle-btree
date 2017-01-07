@@ -81,7 +81,7 @@ merkleBtree
 
 ### Examples
 
-See [`example`](example/script.js) folder or the [runkit](https://runkit.com/mmalmi/merkle-btree) example.
+See [`example`](example) folder or the [runkit](https://runkit.com/mmalmi/merkle-btree) example.
 
 ### License
 
