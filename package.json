@@ -1,6 +1,6 @@
 {
   "name": "merkle-btree",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Content-addressed b-tree",
   "main": "cjs/index.js",
   "browser": "dist/merkleBtree.js",
@@ -77,6 +77,5 @@
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-uglify": "^1.0.1"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
