@@ -1,13 +1,22 @@
-import {get as httpGet} from 'http';
-import {get as httpsGet} from 'https';
+function browserGet(url) {
+  return new Promise(resolve => {
+    const xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = () => {
+      if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
+        resolve(xmlHttp.responseText);
+    };
+    xmlHttp.open(`GET`, url, true); // true for asynchronous
+    xmlHttp.send(null);
+  });
+}
 
 // thanks https://www.tomas-dvorak.cz/posts/nodejs-request-without-dependencies/
-const getContent = function(url) {
+function nodeGet(url) {
   // return new pending promise
   return new Promise((resolve, reject) => {
     // select http or https module, depending on reqested url
-    const get = url.startsWith(`https`) ? httpsGet : httpGet;
-    const request = get(url, response => {
+    const lib = url.startsWith(`https`) ? require(`https`) : require(`http`);
+    const request = lib.get(url, response => {
       // handle http errors
       if (response.statusCode < 200 || response.statusCode > 299) {
         reject(new Error(`Failed to load page, status code: ${response.statusCode}`));
@@ -22,7 +31,15 @@ const getContent = function(url) {
     // handle connection errors of the request
     request.on(`error`, err => reject(err));
   });
-};
+}
+
+function getContent(url) {
+  if (typeof require !== `undefined` && require.resolve(`http`) && require.resolve(`https`)) {
+    return nodeGet(url);
+  } else {
+    return browserGet(url);
+  }
+}
 
 class IPFSGatewayStorage {
   constructor(apiRoot = ``) {
