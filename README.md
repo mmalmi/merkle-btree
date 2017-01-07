@@ -7,7 +7,9 @@
 [![Travis](https://img.shields.io/travis/mmalmi/merkle-btree/master.svg?style=flat-square)](https://travis-ci.org/mmalmi/merkle-btree)
 
 ### Description
-Based on https://github.com/ianopolous/merkle-btree. Project template created with [generator-module-boilerplate](https://github.com/duivvv/generator-module-boilerplate).
+Generic javascript library for writing and reading B-trees on content hash addressed storages. Includes storage adapters for [IPFS](https://ipfs.io/) nodes (read & write) and gateways (read only).
+
+Based on https://github.com/ianopolous/merkle-btree.
 
 ### Installation
 
@@ -33,10 +35,10 @@ The `merkle-btree` package includes precompiled production and development [UMD]
 var ipfsAPI = require('ipfs-api');
 var ipfs = ipfsAPI('localhost', '5001', {protocol: 'http'});
 var lib = require('merkle-btree');
-var storage = new lib.IPFSStorage(ipfs);
-var tree = new lib.MerkleBTree(storage);
 
 // Store entries into a merkle tree on IPFS
+var storage = new lib.IPFSStorage(ipfs);
+var tree = new lib.MerkleBTree(storage);
 tree.put('key', 'value').then(console.log); // outputs tree IPFS file hash after inserting key
 tree.get('key').then(console.log); // 'value'
 tree.search('k').then(console.log); // [ { key: 'key', value: 'value' } ]
