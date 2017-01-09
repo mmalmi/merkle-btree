@@ -1,7 +1,7 @@
 {
   "name": "merkle-btree",
   "description": "Content-addressed b-tree",
-  "main": "dist/merkleBtree.min.js",
+  "main": "dist/merkleBtree.js",
   "authors": [
     "Martti Malmi (martti.malmi@iki.fi)"
   ],
