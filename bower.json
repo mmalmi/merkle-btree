@@ -1,0 +1,21 @@
+{
+  "name": "merkle-btree",
+  "description": "Content-addressed b-tree",
+  "main": "dist/merkleBtree.min.js",
+  "authors": [
+    "Martti Malmi (martti.malmi@iki.fi)"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/mmalmi/merkle-btree",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "es",
+    "cjs",
+    "coverage",
+    "*.log"
+  ]
+}
