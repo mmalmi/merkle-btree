@@ -72,6 +72,7 @@
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-bundle-size": "^1.0.1",
     "rollup-plugin-commonjs": "^7.0.0",
+    "rollup-plugin-includepaths": "^0.1.8",
     "rollup-plugin-node-builtins": "^2.0.0",
     "rollup-plugin-node-globals": "^1.1.0",
     "rollup-plugin-node-resolve": "^2.0.0",
