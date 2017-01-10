@@ -44,12 +44,12 @@ tree.get('key').then(console.log); // 'value'
 tree.search('k').then(console.log); // [ { key: 'key', value: 'value' } ]
 
 // Read-only storage using an IPFS gateway - good for serverless browser apps
-var storage2 = new lib.IPFSGatewayStorage('https://ipfs.io');
-lib.MerkleBTree.getByHash('[insert tree hash]')
+var storage2 = new lib.IPFSGatewayStorage('https://identi.fi');
+lib.MerkleBTree.getByHash('QmWXBTuicL68jxutngJhFjAW7obuS38Yi8H3bNNHUnrB1V/identities')
 .then(function(tree2) {
-  return tree2.get('key');
+  return tree2.get('sirius@iki.fi');
 })
-.then(console.log); // 'value'
+.then(console.log);
 
 ```
 
