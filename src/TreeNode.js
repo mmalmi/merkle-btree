@@ -47,7 +47,7 @@ class TreeNode {
         return Promise.resolve(matches);
       }
       if (limit && matches.length >= limit) {
-        matches = matches.slice(0, limit);
+        matches = matches.slice(0, limit + 1);
         return Promise.resolve(matches);
       }
 
