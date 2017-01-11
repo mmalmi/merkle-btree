@@ -16,7 +16,7 @@
   .then(function(res) {
     console.log('Found sirius@iki.fi:', res);
     console.log('Text searching "b"');
-    return tree.search('b');
+    return tree.searchText('b');
   })
   .then(function(res) {
     console.log('Result:', res);

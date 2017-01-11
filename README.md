@@ -41,7 +41,7 @@ var storage = new lib.IPFSStorage(ipfs);
 var tree = new lib.MerkleBTree(storage);
 tree.put('key', 'value').then(console.log); // outputs tree IPFS file hash after inserting key
 tree.get('key').then(console.log); // 'value'
-tree.search('k').then(console.log); // [ { key: 'key', value: 'value' } ]
+tree.searchText('k').then(console.log); // [ { key: 'key', value: 'value' } ]
 
 // Read-only storage using an IPFS gateway - good for serverless browser apps
 var storage2 = new lib.IPFSGatewayStorage('https://identi.fi');

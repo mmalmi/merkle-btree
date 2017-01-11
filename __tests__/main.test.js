@@ -81,9 +81,39 @@ function runTests(testEntryCount, maxChildren, btree) {
   });
 
   it(`can search by key`, () => {
-    return btree.search(`Satoshi 1`)
+    return btree.searchText(`Satoshi 1`)
       .then(res => {
         expect(res.length).toBeGreaterThan(testEntryCount / 20);
+      });
+  });
+
+  it(`can limit searchText result count`, () => {
+    return btree.searchText(`Satoshi 1`, 2)
+      .then(res => {
+        expect(res.length).toEqual(2);
+      });
+  });
+
+  it(`can search by range`, () => {
+    return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`)
+      .then(res => {
+        expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2);
+        expect(res.length).toBeGreaterThan(1);
+      });
+  });
+
+  it(`can search by range, exclude upper & lower bound`, () => {
+    return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`, false, false, false)
+      .then(res => {
+        expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2 - 1);
+        expect(res.length).toBeGreaterThan(1);
+      });
+  });
+
+  it(`can search by range, lower bound 0 and upper bound tree size`, () => {
+    return btree.searchRange(`Satoshi 1`, `Satoshi ${testEntryCount - 1}`, false, false, false)
+      .then(res => {
+        expect(res.length).toEqual(testEntryCount - 2);
       });
   });
 }

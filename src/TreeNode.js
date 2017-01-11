@@ -1,3 +1,19 @@
+function lt(a, b) {
+  return a < b;
+}
+
+function lte(a, b) {
+  return a <= b;
+}
+
+function gt(a, b) {
+  return a > b;
+}
+
+function gte(a, b) {
+  return a >= b;
+}
+
 class KeyElement {
   constructor(key, value, targetHash) {
     this.key = key;
@@ -38,7 +54,7 @@ class TreeNode {
   }
 
   // Returns multiple matches
-  search(query, limit = 100, storage) {
+  searchText(query, limit = 100, storage) {
     let matches = [];
     const _this = this;
 
@@ -63,7 +79,8 @@ class TreeNode {
       if (k.targetHash) { // branch node
         return storage.get(k.targetHash)
           .then(serialized => {
-            return TreeNode.deserialize(serialized, k.targetHash).search(query, limit, storage);
+            const newLimit = limit ? (limit - matches.length) : undefined;
+            return TreeNode.deserialize(serialized, k.targetHash).searchText(query, newLimit, storage);
           })
           .then(m => {
             if (m) {
@@ -74,6 +91,53 @@ class TreeNode {
       }
       // leaf node
       if (k.key.substring(0, query.length) === query) { // leaf node with matching key
+        matches.push({key: k.key, value: k.value});
+      }
+      return iterate(i + 1);
+    }
+
+    return iterate(0);
+  }
+
+  searchRange(lowerBound, upperBound, limit, storage, includeLowerBound = true, includeUpperBound = true) {
+    let matches = [];
+    const _this = this;
+    const lowerBoundCheck = includeLowerBound ? gte : gt;
+    const upperBoundCheck = includeUpperBound ? lte : lt;
+
+    function iterate(i) {
+      if (i >= _this.keys.length) {
+        return Promise.resolve(matches);
+      }
+      if (limit && matches.length >= limit) {
+        matches = matches.slice(0, limit + 1);
+        return Promise.resolve(matches);
+      }
+
+      const k = _this.keys[i];
+      if (i + 1 < _this.keys.length) {
+        if (k.key > _this.keys[i + 1].key) { // search only nodes whose keys are in the query range
+          return iterate(i + 1);
+        }
+      }
+      if (!upperBoundCheck(k.key, upperBound)) {
+        return Promise.resolve(matches);
+      }
+      if (k.targetHash) { // branch node
+        return storage.get(k.targetHash)
+          .then(serialized => {
+            const newLimit = limit ? (limit - matches.length) : undefined;
+            return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, newLimit, storage, includeLowerBound, includeUpperBound);
+          })
+          .then(m => {
+            if (m) {
+              matches = matches.concat(m);
+            }
+            return iterate(i + 1);
+          });
+      }
+      // leaf node
+      if (lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) { // leaf node with matching key
         matches.push({key: k.key, value: k.value});
       }
       return iterate(i + 1);

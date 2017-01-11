@@ -11,8 +11,12 @@ class MerkleBTree {
     return this.rootNode.get(key, this.storage);
   }
 
-  search(query, limit) {
-    return this.rootNode.search(query, limit, this.storage);
+  searchText(query, limit) {
+    return this.rootNode.searchText(query, limit, this.storage);
+  }
+
+  searchRange(lowerBound, upperBound, limit, includeLowerBound = true, includeUpperBound = true) {
+    return this.rootNode.searchRange(lowerBound, upperBound, limit, this.storage, includeLowerBound, includeUpperBound);
   }
 
   put(key, value) {
