@@ -14,6 +14,10 @@ function gte(a, b) {
   return a >= b;
 }
 
+function any() {
+  return true;
+}
+
 class KeyElement {
   constructor(key, value, targetHash) {
     this.key = key;
@@ -102,8 +106,18 @@ class TreeNode {
   searchRange(lowerBound, upperBound, limit, storage, includeLowerBound = true, includeUpperBound = true) {
     let matches = [];
     const _this = this;
-    const lowerBoundCheck = includeLowerBound ? gte : gt;
-    const upperBoundCheck = includeUpperBound ? lte : lt;
+
+    let lowerBoundCheck, upperBoundCheck;
+    if (lowerBound) {
+      lowerBoundCheck = includeLowerBound ? gte : gt;
+    } else {
+      lowerBoundCheck = any;
+    }
+    if (upperBound) {
+      upperBoundCheck = includeUpperBound ? lte : lt;
+    } else {
+      upperBoundCheck = any;
+    }
 
     function iterate(i) {
       if (i >= _this.keys.length) {
@@ -137,7 +151,7 @@ class TreeNode {
           });
       }
       // leaf node
-      if (lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) { // leaf node with matching key
+      if (k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) { // leaf node with matching key
         matches.push({key: k.key, value: k.value});
       }
       return iterate(i + 1);

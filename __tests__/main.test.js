@@ -80,7 +80,7 @@ function runTests(testEntryCount, maxChildren, btree) {
     return iterate(testEntryCount);
   });
 
-  it(`can search by key`, () => {
+  it(`can searchText by key`, () => {
     return btree.searchText(`Satoshi 1`)
       .then(res => {
         expect(res.length).toBeGreaterThan(testEntryCount / 20);
@@ -94,27 +94,43 @@ function runTests(testEntryCount, maxChildren, btree) {
       });
   });
 
-  it(`can search by range`, () => {
-    return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`)
-      .then(res => {
-        expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2);
-        expect(res.length).toBeGreaterThan(1);
-      });
-  });
+  describe(`searchRange`, () => {
+    it(`can search by range`, () => {
+      return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`)
+        .then(res => {
+          expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2);
+          expect(res.length).toBeGreaterThan(1);
+        });
+    });
 
-  it(`can search by range, exclude upper & lower bound`, () => {
-    return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`, false, false, false)
-      .then(res => {
-        expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2 - 1);
-        expect(res.length).toBeGreaterThan(1);
-      });
-  });
+    it(`can exclude upper & lower bound`, () => {
+      return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`, false, false, false)
+        .then(res => {
+          expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2 - 1);
+          expect(res.length).toBeGreaterThan(1);
+        });
+    });
 
-  it(`can search by range, lower bound 0 and upper bound tree size`, () => {
-    return btree.searchRange(`Satoshi 1`, `Satoshi ${testEntryCount - 1}`, false, false, false)
-      .then(res => {
-        expect(res.length).toEqual(testEntryCount - 2);
-      });
+    it(`returns entryCount - 2 with lower bound 0 and upper bound entryCount`, () => {
+      return btree.searchRange(`Satoshi 1`, `Satoshi ${testEntryCount - 1}`, false, false, false)
+        .then(res => {
+          expect(res.length).toEqual(testEntryCount - 2);
+        });
+    });
+
+    it(`can be used without upperBound`, () => {
+      return btree.searchRange(`Satoshi 1`, undefined, false, false, false)
+        .then(res => {
+          expect(res.length).toEqual(testEntryCount - 1);
+        });
+    });
+
+    it(`can be used without lowerBound`, () => {
+      return btree.searchRange(undefined, `Satoshi ${testEntryCount - 1}`, false, false, false)
+        .then(res => {
+          expect(res.length).toEqual(testEntryCount - 1 + 1);
+        });
+    });
   });
 }
 
