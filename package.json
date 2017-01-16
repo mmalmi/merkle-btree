@@ -1,6 +1,6 @@
 {
   "name": "merkle-btree",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Content-addressed b-tree",
   "main": "cjs/index.js",
   "browser": "dist/merkleBtree.js",
