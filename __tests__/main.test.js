@@ -87,6 +87,13 @@ function runTests(testEntryCount, maxChildren, btree) {
       });
   });
 
+  it(`can searchText with a cursor`, () => {
+    return btree.searchText(`Satoshi 1`, undefined, `Satoshi 1`)
+      .then(res => {
+        expect(res[0].key).toEqual(`Satoshi 10`);
+      });
+  });
+
   it(`can limit searchText result count`, () => {
     return btree.searchText(`Satoshi 1`, 2)
       .then(res => {

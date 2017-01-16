@@ -57,53 +57,11 @@ class TreeNode {
     return Promise.resolve(null); // not found
   }
 
-  // Returns multiple matches
-  searchText(query, limit = 100, storage) {
-    let matches = [];
-    const _this = this;
-
-    function iterate(i) {
-      if (i >= _this.keys.length) {
-        return Promise.resolve(matches);
-      }
-      if (limit && matches.length >= limit) {
-        matches = matches.slice(0, limit + 1);
-        return Promise.resolve(matches);
-      }
-
-      const k = _this.keys[i];
-      if (i + 1 < _this.keys.length) {
-        if (k.key > _this.keys[i + 1].key) { // search only nodes whose keys are in the query range
-          return iterate(i + 1);
-        }
-      }
-      if (query < k.key && k.key.substring(0, query.length) !== query) {
-        return Promise.resolve(matches);
-      }
-      if (k.targetHash) { // branch node
-        return storage.get(k.targetHash)
-          .then(serialized => {
-            const newLimit = limit ? (limit - matches.length) : undefined;
-            return TreeNode.deserialize(serialized, k.targetHash).searchText(query, newLimit, storage);
-          })
-          .then(m => {
-            if (m) {
-              matches = matches.concat(m);
-            }
-            return iterate(i + 1);
-          });
-      }
-      // leaf node
-      if (k.key.substring(0, query.length) === query) { // leaf node with matching key
-        matches.push({key: k.key, value: k.value});
-      }
-      return iterate(i + 1);
-    }
-
-    return iterate(0);
+  searchText(query, limit = 100, cursor, storage) {
+    return this.searchRange(cursor || query, undefined, query, limit, false, undefined, storage);
   }
 
-  searchRange(lowerBound, upperBound, limit, storage, includeLowerBound = true, includeUpperBound = true) {
+  searchRange(lowerBound, upperBound, queryText, limit, includeLowerBound = true, includeUpperBound = true, storage) {
     let matches = [];
     const _this = this;
 
@@ -130,7 +88,7 @@ class TreeNode {
 
       const k = _this.keys[i];
       if (i + 1 < _this.keys.length) {
-        if (k.key > _this.keys[i + 1].key) { // search only nodes whose keys are in the query range
+        if (lowerBound >= _this.keys[i + 1].key) { // search only nodes whose keys are in the query range
           return iterate(i + 1);
         }
       }
@@ -141,7 +99,7 @@ class TreeNode {
         return storage.get(k.targetHash)
           .then(serialized => {
             const newLimit = limit ? (limit - matches.length) : undefined;
-            return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, newLimit, storage, includeLowerBound, includeUpperBound);
+            return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, storage);
           })
           .then(m => {
             if (m) {
@@ -152,7 +110,9 @@ class TreeNode {
       }
       // leaf node
       if (k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) { // leaf node with matching key
-        matches.push({key: k.key, value: k.value});
+        if (!queryText || k.key.substring(0, queryText.length) === queryText) {
+          matches.push({key: k.key, value: k.value});
+        }
       }
       return iterate(i + 1);
     }
