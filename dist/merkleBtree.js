@@ -82,61 +82,18 @@ var TreeNode = function () {
     return Promise.resolve(null); // not found
   };
 
-  // Returns multiple matches
-
-
   TreeNode.prototype.searchText = function searchText(query) {
     var limit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
-    var storage = arguments[2];
+    var cursor = arguments[2];
+    var storage = arguments[3];
 
-    var matches = [];
-    var _this = this;
-
-    function iterate(i) {
-      if (i >= _this.keys.length) {
-        return Promise.resolve(matches);
-      }
-      if (limit && matches.length >= limit) {
-        matches = matches.slice(0, limit + 1);
-        return Promise.resolve(matches);
-      }
-
-      var k = _this.keys[i];
-      if (i + 1 < _this.keys.length) {
-        if (k.key > _this.keys[i + 1].key) {
-          // search only nodes whose keys are in the query range
-          return iterate(i + 1);
-        }
-      }
-      if (query < k.key && k.key.substring(0, query.length) !== query) {
-        return Promise.resolve(matches);
-      }
-      if (k.targetHash) {
-        // branch node
-        return storage.get(k.targetHash).then(function (serialized) {
-          var newLimit = limit ? limit - matches.length : undefined;
-          return TreeNode.deserialize(serialized, k.targetHash).searchText(query, newLimit, storage);
-        }).then(function (m) {
-          if (m) {
-            matches = matches.concat(m);
-          }
-          return iterate(i + 1);
-        });
-      }
-      // leaf node
-      if (k.key.substring(0, query.length) === query) {
-        // leaf node with matching key
-        matches.push({ key: k.key, value: k.value });
-      }
-      return iterate(i + 1);
-    }
-
-    return iterate(0);
+    return this.searchRange(cursor || query, undefined, query, limit, false, undefined, storage);
   };
 
-  TreeNode.prototype.searchRange = function searchRange(lowerBound, upperBound, limit, storage) {
+  TreeNode.prototype.searchRange = function searchRange(lowerBound, upperBound, queryText, limit) {
     var includeLowerBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
     var includeUpperBound = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
+    var storage = arguments[6];
 
     var matches = [];
     var _this = this;
@@ -165,7 +122,7 @@ var TreeNode = function () {
 
       var k = _this.keys[i];
       if (i + 1 < _this.keys.length) {
-        if (k.key > _this.keys[i + 1].key) {
+        if (lowerBound >= _this.keys[i + 1].key) {
           // search only nodes whose keys are in the query range
           return iterate(i + 1);
         }
@@ -177,7 +134,7 @@ var TreeNode = function () {
         // branch node
         return storage.get(k.targetHash).then(function (serialized) {
           var newLimit = limit ? limit - matches.length : undefined;
-          return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, newLimit, storage, includeLowerBound, includeUpperBound);
+          return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, storage);
         }).then(function (m) {
           if (m) {
             matches = matches.concat(m);
@@ -188,7 +145,9 @@ var TreeNode = function () {
       // leaf node
       if (k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
         // leaf node with matching key
-        matches.push({ key: k.key, value: k.value });
+        if (!queryText || k.key.substring(0, queryText.length) === queryText) {
+          matches.push({ key: k.key, value: k.value });
+        }
       }
       return iterate(i + 1);
     }
@@ -418,15 +377,15 @@ var MerkleBTree = function () {
     return this.rootNode.get(key, this.storage);
   };
 
-  MerkleBTree.prototype.searchText = function searchText(query, limit) {
-    return this.rootNode.searchText(query, limit, this.storage);
+  MerkleBTree.prototype.searchText = function searchText(query, limit, cursor) {
+    return this.rootNode.searchText(query, limit, cursor, this.storage);
   };
 
   MerkleBTree.prototype.searchRange = function searchRange(lowerBound, upperBound, limit) {
     var includeLowerBound = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
     var includeUpperBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
 
-    return this.rootNode.searchRange(lowerBound, upperBound, limit, this.storage, includeLowerBound, includeUpperBound);
+    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, this.storage);
   };
 
   MerkleBTree.prototype.put = function put(key, value) {
