@@ -49,9 +49,15 @@ class MerkleBTree {
   }
 
   static getByHash(hash, storage, maxChildren) {
-    // TODO: guess maxChildren from tree?
     return storage.get(hash).then(data => {
       const rootNode = TreeNode.deserialize(data);
+      return new MerkleBTree(storage, maxChildren, rootNode);
+    });
+  }
+
+  static fromSortedList(list, maxChildren, storage) {
+    return TreeNode.fromSortedList(list, maxChildren, storage)
+    .then(rootNode => {
       return new MerkleBTree(storage, maxChildren, rootNode);
     });
   }

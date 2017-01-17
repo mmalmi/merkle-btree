@@ -148,7 +148,55 @@ describe(`merkle-btree`, () => {
   describe(`RAMStorage`, () => {
     const testEntryCount = 1000;
     const maxChildren = 10;
+
     runTests(testEntryCount, maxChildren, new MerkleBTree(new RAMStorage(), maxChildren));
+
+    describe(`fromSortedList`, () => {
+      let btree;
+      const list = [
+        {key: 'Alice', value: 'Cooper', targetHash: null},
+        {key: 'Bob', value: 'Marley', targetHash: null},
+        {key: 'Charles', value: 'Darwin', targetHash: null},
+        {key: 'Dean', value: 'Anderson', targetHash: null},
+        {key: 'Enoch', value: 'Thompson', targetHash: null},
+        {key: 'Ford', value: 'Harrison', targetHash: null},
+        {key: 'George', value: 'Michael', targetHash: null},
+        {key: 'Henry', value: 'Lee', targetHash: null},
+        {key: 'Ivanka', value: 'Trump', targetHash: null},
+        {key: 'James', value: 'Oliver', targetHash: null},
+        {key: 'Katy', value: 'Perry', targetHash: null},
+        {key: 'Larry', value: 'Page', targetHash: null},
+        {key: 'Mariah', value: 'Carey', targetHash: null},
+        {key: 'Nick', value: 'Cave', targetHash: null},
+        {key: 'Orlando', value: 'Bloom', targetHash: null}
+      ];
+      it(`can create a tree from an empty list`, () => {
+        return MerkleBTree.fromSortedList([], maxChildren, new RAMStorage())
+          .then(res => {
+            expect(res).toBeInstanceOf(MerkleBTree);
+          });
+      });
+
+      it(`can create a tree from a sorted list`, () => {
+        const storage = new RAMStorage();
+        return MerkleBTree.fromSortedList(list.slice(), maxChildren, storage)
+          .then(res => {
+            expect(res).toBeInstanceOf(MerkleBTree);
+            btree = res;
+          });
+      });
+
+      it(`can get tree items normally`, () => {
+        return btree.get(`Ford`)
+          .then(res => {
+            expect(res).toEqual(`Harrison`);
+            return btree.searchText(``);
+          })
+          .then(res => {
+            expect(res.length).toEqual(list.length);
+          });
+      });
+    });
   });
 
   describe(`IPFSStorage`, () => {

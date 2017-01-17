@@ -4,6 +4,8 @@
   (global.merkleBtree = factory());
 }(this, (function () { 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function lt(a, b) {
@@ -338,10 +340,12 @@ var TreeNode = function () {
     });
     this.keys.forEach(function (key) {
       if (key.targetHash) {
-        var child = TreeNode.deserialize(storage.get(key.targetHash), key.targetHash);
-        str += "\n";
-        str += indentation;
-        str += child.print(storage, lvl + 1);
+        storage.get(key.targetHash).then(function (serialized) {
+          var child = TreeNode.deserialize(serialized, key.targetHash);
+          str += "\n";
+          str += indentation;
+          str += child.print(storage, lvl + 1);
+        });
       }
     });
     return str;
@@ -354,6 +358,46 @@ var TreeNode = function () {
   TreeNode.deserialize = function deserialize(data, hash) {
     data = JSON.parse(data);
     return new TreeNode(data.leftChildHash, data.keys, hash);
+  };
+
+  /*
+    Create a tree from a [{key,value,targetHash}, ...] list sorted in ascending order by k.
+    targetHash must be null for leaf nodes.
+  */
+
+
+  TreeNode.fromSortedList = function fromSortedList(list, maxChildren, storage) {
+    function addNextParentNode(parentNodeList) {
+      if (list.length) {
+        var _ret = function () {
+          var keys = list.splice(0, maxChildren);
+          return {
+            v: storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
+              parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
+              return addNextParentNode(parentNodeList);
+            })
+          };
+        }();
+
+        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+      }
+      if (parentNodeList.length && parentNodeList[0].targetHash) {
+        parentNodeList[0].key = "";
+      }
+      console.log("parentNodeList", parentNodeList);
+      return TreeNode.fromSortedList(parentNodeList, maxChildren, storage);
+    }
+
+    if (list.length > maxChildren) {
+      return addNextParentNode([]);
+    }
+
+    var targetHash = list.length ? list[0].targetHash : null;
+    var node = new TreeNode(targetHash, list);
+    return storage.put(node.serialize()).then(function (hash) {
+      node.hash = hash;
+      return node;
+    });
   };
 
   return TreeNode;
@@ -421,9 +465,14 @@ var MerkleBTree = function () {
   };
 
   MerkleBTree.getByHash = function getByHash(hash, storage, maxChildren) {
-    // TODO: guess maxChildren from tree?
     return storage.get(hash).then(function (data) {
       var rootNode = TreeNode.deserialize(data);
+      return new MerkleBTree(storage, maxChildren, rootNode);
+    });
+  };
+
+  MerkleBTree.fromSortedList = function fromSortedList(list, maxChildren, storage) {
+    return TreeNode.fromSortedList(list, maxChildren, storage).then(function (rootNode) {
       return new MerkleBTree(storage, maxChildren, rootNode);
     });
   };

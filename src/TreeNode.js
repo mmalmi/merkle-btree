@@ -290,10 +290,12 @@ class TreeNode {
     });
     this.keys.forEach(key => {
       if (key.targetHash) {
-        const child = TreeNode.deserialize(storage.get(key.targetHash), key.targetHash);
-        str += `\n`;
-        str += indentation;
-        str += child.print(storage, lvl + 1);
+        storage.get(key.targetHash).then(serialized => {
+          const child = TreeNode.deserialize(serialized, key.targetHash);
+          str += `\n`;
+          str += indentation;
+          str += child.print(storage, lvl + 1);
+        });
       }
     });
     return str;
@@ -306,6 +308,39 @@ class TreeNode {
   static deserialize(data, hash) {
     data = JSON.parse(data);
     return new TreeNode(data.leftChildHash, data.keys, hash);
+  }
+
+  /*
+    Create a tree from a [{key,value,targetHash}, ...] list sorted in ascending order by k.
+    targetHash must be null for leaf nodes.
+  */
+  static fromSortedList(list, maxChildren, storage) {
+    function addNextParentNode(parentNodeList) {
+      if (list.length) {
+        const keys = list.splice(0, maxChildren);
+        return storage.put(new TreeNode(keys[0].targetHash, keys).serialize())
+        .then(res => {
+          parentNodeList.push({key: keys[1].key, targetHash: res, value: null});
+          return addNextParentNode(parentNodeList);
+        });
+      }
+      if (parentNodeList.length && parentNodeList[0].targetHash) {
+        parentNodeList[0].key = ``;
+      }
+      console.log(`parentNodeList`, parentNodeList);
+      return TreeNode.fromSortedList(parentNodeList, maxChildren, storage);
+    }
+
+    if (list.length > maxChildren) {
+      return addNextParentNode([]);
+    }
+
+    const targetHash = list.length ? list[0].targetHash : null;
+    const node = new TreeNode(targetHash, list);
+    return storage.put(node.serialize()).then(hash => {
+      node.hash = hash;
+      return node;
+    });
   }
 }
 
