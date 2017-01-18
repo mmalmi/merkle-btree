@@ -384,7 +384,6 @@ var TreeNode = function () {
       if (parentNodeList.length && parentNodeList[0].targetHash) {
         parentNodeList[0].key = "";
       }
-      console.log("parentNodeList", parentNodeList);
       return TreeNode.fromSortedList(parentNodeList, maxChildren, storage);
     }
 
