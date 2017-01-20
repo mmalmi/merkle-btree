@@ -11,12 +11,12 @@ class MerkleBTree {
     return this.rootNode.get(key, this.storage);
   }
 
-  searchText(query, limit, cursor) {
-    return this.rootNode.searchText(query, limit, cursor, this.storage);
+  searchText(query, limit, cursor, reverse = false) {
+    return this.rootNode.searchText(query, limit, cursor, reverse, this.storage);
   }
 
-  searchRange(lowerBound, upperBound, limit, includeLowerBound = true, includeUpperBound = true) {
-    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, this.storage);
+  searchRange(lowerBound, upperBound, limit, includeLowerBound = true, includeUpperBound = true, reverse = false) {
+    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, reverse, this.storage);
   }
 
   put(key, value) {

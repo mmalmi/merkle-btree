@@ -102,11 +102,24 @@ function runTests(testEntryCount, maxChildren, btree) {
   });
 
   describe(`searchRange`, () => {
+    let r;
     it(`can search by range`, () => {
       return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`)
         .then(res => {
+          r = res;
           expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2);
           expect(res.length).toBeGreaterThan(1);
+        });
+    });
+
+    it(`can search by range in reverse order`, () => {
+      return btree.searchRange(`Satoshi ${testEntryCount / 3}`, `Satoshi ${testEntryCount / 2}`, undefined, undefined, undefined, true)
+        .then(res => {
+          expect(res.length).toBeLessThanOrEqual(testEntryCount / 6 + maxChildren * 2);
+          expect(res.length).toBeGreaterThan(1);
+          res.forEach(function(row, i) {
+            expect(row).toEqual(r[r.length - 1 - i]);
+          });
         });
     });
 

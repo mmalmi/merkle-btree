@@ -87,15 +87,27 @@ var TreeNode = function () {
   TreeNode.prototype.searchText = function searchText(query) {
     var limit = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
     var cursor = arguments[2];
-    var storage = arguments[3];
+    var reverse = arguments[3];
+    var storage = arguments[4];
 
-    return this.searchRange(cursor || query, undefined, query, limit, false, undefined, storage);
+    var lowerBound = cursor || query;
+    var upperBound = undefined;
+    var includeLowerBound = !cursor;
+    var includeUpperBound = true;
+    if (reverse) {
+      lowerBound = query;
+      upperBound = cursor || undefined;
+      includeLowerBound = true;
+      includeUpperBound = !cursor;
+    }
+    return this.searchRange(lowerBound, upperBound, query, limit, includeLowerBound, includeUpperBound, reverse, storage);
   };
 
   TreeNode.prototype.searchRange = function searchRange(lowerBound, upperBound, queryText, limit) {
     var includeLowerBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
     var includeUpperBound = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
-    var storage = arguments[6];
+    var reverse = arguments[6];
+    var storage = arguments[7];
 
     var matches = [];
     var _this = this;
@@ -114,7 +126,7 @@ var TreeNode = function () {
     }
 
     function iterate(i) {
-      if (i >= _this.keys.length) {
+      if (i < 0 || i >= _this.keys.length) {
         return Promise.resolve(matches);
       }
       if (limit && matches.length >= limit) {
@@ -122,39 +134,48 @@ var TreeNode = function () {
         return Promise.resolve(matches);
       }
 
+      var next = reverse ? i - 1 : i + 1;
       var k = _this.keys[i];
-      if (i + 1 < _this.keys.length) {
-        if (lowerBound >= _this.keys[i + 1].key) {
+      if (next >= 0 && next < _this.keys.length) {
+        if (!reverse && lowerBound >= _this.keys[next].key) {
           // search only nodes whose keys are in the query range
-          return iterate(i + 1);
+          return iterate(next);
+        }
+        if (reverse && upperBound < _this.keys[next].key) {
+          // search only nodes whose keys are in the query range
+          return iterate(next);
         }
       }
-      if (!upperBoundCheck(k.key, upperBound)) {
+      // return if search range upper / lower bound was passed
+      if (reverse && i + 1 < _this.keys.length && !lowerBoundCheck(_this.keys[i + 1].key, lowerBound)) {
+        return Promise.resolve(matches);
+      }
+      if (!reverse && !upperBoundCheck(k.key, upperBound)) {
         return Promise.resolve(matches);
       }
       if (k.targetHash) {
         // branch node
         return storage.get(k.targetHash).then(function (serialized) {
           var newLimit = limit ? limit - matches.length : undefined;
-          return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, storage);
+          return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, reverse, storage);
         }).then(function (m) {
           if (m) {
             matches = matches.concat(m);
           }
-          return iterate(i + 1);
+          return iterate(next);
         });
       }
       // leaf node
-      if (k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
+      if (k.key.length && k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
         // leaf node with matching key
         if (!queryText || k.key.substring(0, queryText.length) === queryText) {
           matches.push({ key: k.key, value: k.value });
         }
       }
-      return iterate(i + 1);
+      return iterate(next);
     }
 
-    return iterate(0);
+    return iterate(reverse ? this.keys.length - 1 : 0);
   };
 
   TreeNode.prototype._getLeafInsertIndex = function _getLeafInsertIndex(key) {
@@ -421,14 +442,17 @@ var MerkleBTree = function () {
   };
 
   MerkleBTree.prototype.searchText = function searchText(query, limit, cursor) {
-    return this.rootNode.searchText(query, limit, cursor, this.storage);
+    var reverse = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+
+    return this.rootNode.searchText(query, limit, cursor, reverse, this.storage);
   };
 
   MerkleBTree.prototype.searchRange = function searchRange(lowerBound, upperBound, limit) {
     var includeLowerBound = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
     var includeUpperBound = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : true;
+    var reverse = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
-    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, this.storage);
+    return this.rootNode.searchRange(lowerBound, upperBound, false, limit, includeLowerBound, includeUpperBound, reverse, this.storage);
   };
 
   MerkleBTree.prototype.put = function put(key, value) {
