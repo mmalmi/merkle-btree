@@ -28,6 +28,10 @@ function any() {
   return true;
 }
 
+function beginsWith(str, begin) {
+  return str.substring(0, begin.length) === begin;
+}
+
 var KeyElement = function KeyElement(key, value, targetHash) {
   _classCallCheck$1(this, KeyElement);
 
@@ -160,16 +164,24 @@ var TreeNode = function () {
           return TreeNode.deserialize(serialized, k.targetHash).searchRange(lowerBound, upperBound, queryText, newLimit, includeLowerBound, includeUpperBound, reverse, storage);
         }).then(function (m) {
           if (m) {
-            matches = matches.concat(m);
+            if (matches.length && !m.length) {
+              return Promise.resolve(matches); // matches were previously found but now we're out of range
+            }
+            Array.prototype.push.apply(matches, m);
           }
           return iterate(next);
         });
       }
       // leaf node
-      if (k.key.length && k.value && lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
-        // leaf node with matching key
-        if (!queryText || k.key.substring(0, queryText.length) === queryText) {
-          matches.push({ key: k.key, value: k.value });
+      if (k.key.length && k.value) {
+        if (queryText && matches.length && !beginsWith(k.key, queryText)) {
+          return Promise.resolve(matches); // matches were previously found but now we're out of range
+        }
+        if (lowerBoundCheck(k.key, lowerBound) && upperBoundCheck(k.key, upperBound)) {
+          // leaf node with matching key
+          if (!queryText || beginsWith(k.key, queryText)) {
+            matches.push({ key: k.key, value: k.value });
+          }
         }
       }
       return iterate(next);
