@@ -260,14 +260,38 @@ class TreeNode {
   }
 
   delete(key, storage) {
-    storage.remove(key);
-    for (let i = 0;i < this.keys.length;i ++) {
-      if (this.keys[i].key === key) {
-        this.keys.splice(i, 1);
+    let nextKey = this.keys[0];
+    let i;
+    for (i = 0;i < this.keys.length;i ++) {
+      if (key < this.keys[i].key) {
+        i = Math.max(i - 1, 0);
+        break;
       }
+      nextKey = this.keys[i];
     }
-    const hash = storage.put(this.serialize());
-    return new TreeNode(this.leftChildHash, this.keys, hash);
+    let q = Promise.resolve();
+    if (nextKey.targetHash) {
+      q = q.then(() => {
+        return storage.get(nextKey.targetHash)
+          .then(serialized => {
+            return TreeNode.deserialize(serialized, nextKey.targetHash).delete(key, storage);
+          })
+          .then(newNode => {
+            const oldHash = this.keys[i].targetHash;
+            this.keys[i].targetHash = newNode.hash;
+            return storage.remove(oldHash);
+          });
+      });
+    }
+    else if (nextKey.key === key) {
+      this.keys.splice(i, 1);
+    }
+    return q.then(() => {
+      return storage.put(this.serialize());
+    })
+    .then(hash => {
+      return new TreeNode(this.leftChildHash, this.keys, hash);
+    });
   }
 
   size(storage) {

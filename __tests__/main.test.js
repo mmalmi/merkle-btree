@@ -15,7 +15,7 @@ const satoshi = {
 };
 
 function runTests(testEntryCount, maxChildren, btree) {
-  let hash;
+  let hash, treeSize;
 
   it(`inserts a value and returns a hash`, () => {
     return btree.put(`Satoshi`, satoshi)
@@ -61,6 +61,7 @@ function runTests(testEntryCount, maxChildren, btree) {
     // TODO: could make a better approximation of tree size
     return btree.size()
       .then(function(size) {
+        treeSize = size;
         expect(size).toBeGreaterThanOrEqual(testEntryCount + leafNodeCount);
         //expect(size).toBeLessThanOrEqual(Math.pow(maxChildren, expectedDepth));
       });
@@ -151,6 +152,17 @@ function runTests(testEntryCount, maxChildren, btree) {
           expect(res.length).toEqual(testEntryCount - 1 + 1);
         });
     });
+  });
+
+  it(`can delete entries`, () => {
+    return btree.delete(`Satoshi 1`)
+      .then(res => {
+        expect(typeof res).toEqual(`string`);
+        return btree.size();
+      })
+      .then(size => {
+        expect(size).toEqual(treeSize - 1);
+      });
   });
 }
 

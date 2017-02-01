@@ -311,14 +311,36 @@ var TreeNode = function () {
   };
 
   TreeNode.prototype.delete = function _delete(key, storage) {
-    storage.remove(key);
-    for (var i = 0; i < this.keys.length; i++) {
-      if (this.keys[i].key === key) {
-        this.keys.splice(i, 1);
+    var _this4 = this;
+
+    var nextKey = this.keys[0];
+    var i = void 0;
+    for (i = 0; i < this.keys.length; i++) {
+      if (key < this.keys[i].key) {
+        i = Math.max(i - 1, 0);
+        break;
       }
+      nextKey = this.keys[i];
     }
-    var hash = storage.put(this.serialize());
-    return new TreeNode(this.leftChildHash, this.keys, hash);
+    var q = Promise.resolve();
+    if (nextKey.targetHash) {
+      q = q.then(function () {
+        return storage.get(nextKey.targetHash).then(function (serialized) {
+          return TreeNode.deserialize(serialized, nextKey.targetHash).delete(key, storage);
+        }).then(function (newNode) {
+          var oldHash = _this4.keys[i].targetHash;
+          _this4.keys[i].targetHash = newNode.hash;
+          return storage.remove(oldHash);
+        });
+      });
+    } else if (nextKey.key === key) {
+      this.keys.splice(i, 1);
+    }
+    return q.then(function () {
+      return storage.put(_this4.serialize());
+    }).then(function (hash) {
+      return new TreeNode(_this4.leftChildHash, _this4.keys, hash);
+    });
   };
 
   TreeNode.prototype.size = function size(storage) {
@@ -472,10 +494,7 @@ var MerkleBTree = function () {
 
     return this.rootNode.put(key, value, this.storage, this.maxChildren).then(function (newRoot) {
       _this.rootNode = newRoot;
-      return _this.storage.put(newRoot.serialize());
-    }).then(function (newHash) {
-      _this.rootNode = new TreeNode(_this.rootNode.leftChildHash, _this.rootNode.keys, newHash);
-      return newHash;
+      return _this.rootNode.hash;
     });
   };
 
@@ -484,7 +503,7 @@ var MerkleBTree = function () {
 
     return this.rootNode.delete(key, this.storage, this.maxChildren).then(function (newRoot) {
       _this2.rootNode = newRoot;
-      return newRoot.hash;
+      return _this2.rootNode.hash;
     });
   };
 

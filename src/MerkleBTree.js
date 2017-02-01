@@ -23,11 +23,7 @@ class MerkleBTree {
     return this.rootNode.put(key, value, this.storage, this.maxChildren)
       .then(newRoot => {
         this.rootNode = newRoot;
-        return this.storage.put(newRoot.serialize());
-      })
-      .then(newHash => {
-        this.rootNode = new TreeNode(this.rootNode.leftChildHash, this.rootNode.keys, newHash);
-        return newHash;
+        return this.rootNode.hash;
       });
   }
 
@@ -35,7 +31,7 @@ class MerkleBTree {
     return this.rootNode.delete(key, this.storage, this.maxChildren)
       .then(newRoot => {
         this.rootNode = newRoot;
-        return newRoot.hash;
+        return this.rootNode.hash;
       });
   }
 
