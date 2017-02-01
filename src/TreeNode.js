@@ -277,8 +277,8 @@ class TreeNode {
             return TreeNode.deserialize(serialized, nextKey.targetHash).delete(key, storage);
           })
           .then(newNode => {
-            const oldHash = this.keys[i].targetHash;
-            this.keys[i].targetHash = newNode.hash;
+            const oldHash = nextKey.targetHash;
+            nextKey.targetHash = newNode.hash;
             return storage.remove(oldHash);
           });
       });

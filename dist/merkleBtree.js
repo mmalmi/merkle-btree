@@ -328,8 +328,8 @@ var TreeNode = function () {
         return storage.get(nextKey.targetHash).then(function (serialized) {
           return TreeNode.deserialize(serialized, nextKey.targetHash).delete(key, storage);
         }).then(function (newNode) {
-          var oldHash = _this4.keys[i].targetHash;
-          _this4.keys[i].targetHash = newNode.hash;
+          var oldHash = nextKey.targetHash;
+          nextKey.targetHash = newNode.hash;
           return storage.remove(oldHash);
         });
       });

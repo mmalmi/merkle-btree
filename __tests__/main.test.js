@@ -164,6 +164,13 @@ function runTests(testEntryCount, maxChildren, btree) {
         expect(size).toEqual(treeSize - 1);
       });
   });
+
+  it(`does not return deleted entry`, () => {
+    return btree.get(`Satoshi 1`)
+      .then(res => {
+        expect(res).toBeNull();
+      });
+  });
 }
 
 describe(`merkle-btree`, () => {
