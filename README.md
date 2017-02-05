@@ -83,6 +83,8 @@ merkleBtree
 
 See [`example`](example) folder or the [runkit](https://runkit.com/mmalmi/merkle-btree) example.
 
+[Identi.fi](https://identi.fi) identity and message indexes are built on the library.
+
 ### License
 
 The code is available under the [MIT](LICENSE) license.
