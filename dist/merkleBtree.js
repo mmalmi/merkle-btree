@@ -167,6 +167,10 @@ var TreeNode = function () {
             if (matches.length && !m.length) {
               return Promise.resolve(matches); // matches were previously found but now we're out of range
             }
+            if (queryText && !m.length) {
+              // text search found no results where they could have been
+              return Promise.resolve(matches);
+            }
             Array.prototype.push.apply(matches, m);
           }
           return iterate(next);
