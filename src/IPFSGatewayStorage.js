@@ -1,9 +1,11 @@
 function browserGet(url) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = () => {
-      if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
-        resolve(xmlHttp.responseText);
+    xmlHttp.onreadystatechange = function () {
+      if (xmlHttp.readyState === 4) {
+        if (xmlHttp.status >= 200 && xmlHttp.status < 300) resolve(xmlHttp.responseText);
+        else reject(xmlHttp.responseText);
+      }
     };
     xmlHttp.open(`GET`, url, true); // true for asynchronous
     xmlHttp.send(null);

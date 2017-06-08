@@ -168,7 +168,7 @@ var TreeNode = function () {
               return Promise.resolve(matches); // matches were previously found but now we're out of range
             }
             if (queryText && !m.length) {
-              // text search found no results where they could have been
+              // text search yielded no results where they could have been
               return Promise.resolve(matches);
             }
             Array.prototype.push.apply(matches, m);
@@ -2511,10 +2511,12 @@ var IPFSStorage = function () {
 function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function browserGet(url) {
-  return new Promise(function (resolve) {
+  return new Promise(function (resolve, reject) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function () {
-      if (xmlHttp.readyState === 4 && xmlHttp.status === 200) resolve(xmlHttp.responseText);
+      if (xmlHttp.readyState === 4) {
+        if (xmlHttp.status >= 200 && xmlHttp.status < 300) resolve(xmlHttp.responseText);else reject(xmlHttp.responseText);
+      }
     };
     xmlHttp.open("GET", url, true); // true for asynchronous
     xmlHttp.send(null);
