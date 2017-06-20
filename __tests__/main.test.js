@@ -31,6 +31,38 @@ function runTests(testEntryCount, maxChildren, btree) {
       });
   });
 
+  it(`should have size of 2`, () => {
+    return btree.size()
+      .then(function(size) {
+        treeSize = size;
+        expect(size).toEqual(2);
+        //expect(size).toBeLessThanOrEqual(Math.pow(maxChildren, expectedDepth));
+      });
+  });
+
+  it(`updates the existing value`, () => {
+    return btree.put(`Satoshi`, Object.assign({updated:true}, satoshi))
+      .then(hash => {
+        expect(typeof hash).toBe(`string`);
+      });
+  });
+
+  it(`returns the updated value`, () => {
+    return btree.get(`Satoshi`)
+      .then(res => {
+        expect(res.updated).toBe(true);
+      });
+  });
+
+  it(`should still have size of 2`, () => {
+    return btree.size()
+      .then(function(size) {
+        treeSize = size;
+        expect(size).toEqual(2);
+        //expect(size).toBeLessThanOrEqual(Math.pow(maxChildren, expectedDepth));
+      });
+  });
+
   it(`can store lots of keys`, () => {
     function iterate(i) {
       //console.log(i);
