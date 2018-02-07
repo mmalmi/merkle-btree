@@ -292,9 +292,9 @@ class TreeNode {
     return q.then(() => {
       return storage.put(this.serialize());
     })
-    .then(hash => {
-      return new TreeNode(this.leftChildHash, this.keys, hash);
-    });
+      .then(hash => {
+        return new TreeNode(this.leftChildHash, this.keys, hash);
+      });
   }
 
   size(storage) {
@@ -376,10 +376,10 @@ class TreeNode {
       if (list.length) {
         const keys = list.splice(0, maxChildren);
         return storage.put(new TreeNode(keys[0].targetHash, keys).serialize())
-        .then(res => {
-          parentNodeList.push({key: keys[1].key, targetHash: res, value: null});
-          return addNextParentNode(parentNodeList);
-        });
+          .then(res => {
+            parentNodeList.push({key: keys[1].key, targetHash: res, value: null});
+            return addNextParentNode(parentNodeList);
+          });
       }
       if (parentNodeList.length && parentNodeList[0].targetHash) {
         parentNodeList[0].key = ``;

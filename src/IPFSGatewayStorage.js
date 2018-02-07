@@ -1,3 +1,8 @@
+let isNode = false;
+try {
+  isNode = Object.prototype.toString.call(global.process) === `[object process]`;
+} catch (e) { null; }
+
 function browserGet(url) {
   return new Promise((resolve, reject) => {
     const xmlHttp = new XMLHttpRequest();
@@ -36,7 +41,7 @@ function nodeGet(url) {
 }
 
 function getContent(url) {
-  if (typeof require !== `undefined` && require.resolve(`http`) && require.resolve(`https`)) {
+  if (isNode && require.resolve(`http`) && require.resolve(`https`)) {
     return nodeGet(url);
   } else {
     return browserGet(url);

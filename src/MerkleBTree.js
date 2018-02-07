@@ -53,9 +53,9 @@ class MerkleBTree {
 
   static fromSortedList(list, maxChildren, storage) {
     return TreeNode.fromSortedList(list, maxChildren, storage)
-    .then(rootNode => {
-      return new MerkleBTree(storage, maxChildren, rootNode);
-    });
+      .then(rootNode => {
+        return new MerkleBTree(storage, maxChildren, rootNode);
+      });
   }
 }
 

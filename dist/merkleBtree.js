@@ -2510,6 +2510,13 @@ var IPFSStorage = function () {
 
 function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var isNode = false;
+try {
+  isNode = Object.prototype.toString.call(global$1.process) === "[object process]";
+} catch (e) {
+  null;
+}
+
 function browserGet(url) {
   return new Promise(function (resolve, reject) {
     var xmlHttp = new XMLHttpRequest();
@@ -2553,7 +2560,7 @@ function nodeGet(url) {
 }
 
 function getContent(url) {
-  if (typeof require !== "undefined" && require.resolve("http") && require.resolve("https")) {
+  if (isNode && require.resolve("http") && require.resolve("https")) {
     return nodeGet(url);
   } else {
     return browserGet(url);

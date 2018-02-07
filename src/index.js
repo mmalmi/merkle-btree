@@ -4,8 +4,8 @@ import IPFSStorage from './IPFSStorage';
 import IPFSGatewayStorage from './IPFSGatewayStorage';
 
 export default {
-  MerkleBTree: MerkleBTree,
-  TreeNode: TreeNode,
-  IPFSStorage: IPFSStorage,
-  IPFSGatewayStorage: IPFSGatewayStorage
+  MerkleBTree,
+  TreeNode,
+  IPFSStorage,
+  IPFSGatewayStorage,
 };
