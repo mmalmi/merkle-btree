@@ -1,10 +1,8 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.merkleBtree = factory());
-}(this, (function () { 'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('crypto')) :
+  typeof define === 'function' && define.amd ? define(['crypto'], factory) :
+  (global.merkleBtree = factory(global.crypto));
+}(this, (function (crypto) { 'use strict';
 
 function _classCallCheck$1(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -428,17 +426,11 @@ var TreeNode = function () {
   TreeNode.fromSortedList = function fromSortedList(list, maxChildren, storage) {
     function addNextParentNode(parentNodeList) {
       if (list.length) {
-        var _ret = function () {
-          var keys = list.splice(0, maxChildren);
-          return {
-            v: storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
-              parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
-              return addNextParentNode(parentNodeList);
-            })
-          };
-        }();
-
-        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+        var keys = list.splice(0, maxChildren);
+        return storage.put(new TreeNode(keys[0].targetHash, keys).serialize()).then(function (res) {
+          parentNodeList.push({ key: keys[1].key, targetHash: res, value: null });
+          return addNextParentNode(parentNodeList);
+        });
       }
       if (parentNodeList.length && parentNodeList[0].targetHash) {
         parentNodeList[0].key = "";
@@ -2510,6 +2502,56 @@ var IPFSStorage = function () {
 
 function _classCallCheck$3(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var RAMStorage = function () {
+  function RAMStorage() {
+    _classCallCheck$3(this, RAMStorage);
+
+    this.storage = {};
+  }
+
+  RAMStorage.prototype.put = function put(value) {
+    var _this = this;
+
+    return new Promise(function (resolve) {
+      var sha256 = crypto.createHash('sha256');
+      sha256.update(value);
+      var hash = sha256.digest('base64');
+      _this.storage[hash] = value;
+      resolve(hash);
+    });
+  };
+
+  RAMStorage.prototype.get = function get(key) {
+    var _this2 = this;
+
+    return new Promise(function (resolve) {
+      resolve(_this2.storage[key]);
+    });
+  };
+
+  RAMStorage.prototype.remove = function remove(key) {
+    var _this3 = this;
+
+    return new Promise(function (resolve) {
+      delete _this3.storage[key];
+      resolve();
+    });
+  };
+
+  RAMStorage.prototype.clear = function clear() {
+    var _this4 = this;
+
+    return new Promise(function (resolve) {
+      _this4.storage = {};
+      resolve();
+    });
+  };
+
+  return RAMStorage;
+}();
+
+function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var isNode = false;
 try {
   isNode = Object.prototype.toString.call(global$1.process) === "[object process]";
@@ -2571,7 +2613,7 @@ var IPFSGatewayStorage = function () {
   function IPFSGatewayStorage() {
     var apiRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 
-    _classCallCheck$3(this, IPFSGatewayStorage);
+    _classCallCheck$4(this, IPFSGatewayStorage);
 
     this.apiRoot = apiRoot;
   }
@@ -2597,6 +2639,7 @@ var IPFSGatewayStorage = function () {
 var index = {
   MerkleBTree: MerkleBTree,
   TreeNode: TreeNode,
+  RAMStorage: RAMStorage,
   IPFSStorage: IPFSStorage,
   IPFSGatewayStorage: IPFSGatewayStorage
 };

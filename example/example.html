@@ -3,16 +3,13 @@
   <title>Test</title>
   <script src="../dist/MerkleBTree.js"></script>
   <script type="text/javascript">
-  var storage = new window.merkleBtree.IPFSGatewayStorage('https://identi.fi');
-  var tree;
-  window.merkleBtree.MerkleBTree.getByHash('QmWXBTuicL68jxutngJhFjAW7obuS38Yi8H3bNNHUnrB1V/identities', storage)
-  .then(function(res) {
-    tree = res;
-    window.tree = tree;
-    console.log('Got merkle-btree', tree);
-    console.log('Searching for key sirius@iki.fi');
-    return tree.get('sirius@iki.fi');
-  })
+  /*
+  var storage = new window.merkleBtree.RAMStorage();
+  var tree = new window.merkleBtree.;
+  window.tree = tree;
+  console.log('Got merkle-btree', tree);
+  console.log('Searching for key sirius@iki.fi');
+  return tree.get('sirius@iki.fi');
   .then(function(res) {
     console.log('Found sirius@iki.fi:', res);
     console.log('Text searching "b"');
@@ -21,7 +18,7 @@
   .then(function(res) {
     console.log('Result:', res);
   });
-
+*/
   </script>
 </head>
 
