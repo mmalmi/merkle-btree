@@ -7,11 +7,10 @@ class GUNStorage {
   }
 
   put(value) {
+    const sha256 = createHash(`sha256`);
+    sha256.update(value);
+    const hash = sha256.digest(`base64`);
     return new Promise((resolve, reject) => {
-      const sha256 = createHash(`sha256`);
-      sha256.update(value);
-      const hash = sha256.digest(`base64`);
-      console.log(`put`, hash);
       this.gun.get(hash).put(value, ack => {
         if (ack.err) {
           return reject(ack.err);
@@ -23,7 +22,6 @@ class GUNStorage {
 
   get(hash) {
     return new Promise((resolve, reject) => {
-      console.log(`get`, hash);
       this.gun.get(hash).once(data => {
         if (!data) {
           return reject(`Error: Hash cannot be found at ${hash}`);
@@ -33,27 +31,12 @@ class GUNStorage {
     });
   }
 
-  remove(hash) {
-    return new Promise(resolve => {
-      resolve();
-    });
-    /*
-    return new Promise((resolve, reject) => {
-      console.log(`remove`, hash);
-      this.gun.get(hash).put(null, ack => {
-        if (ack.err) {
-          return reject(ack.err);
-        }
-        resolve(ack.ok || `Nulled!`);
-      });
-    });
-    */
+  remove(key) {
+    return Promise.resolve(key);
   }
 
   clear() {
-    return new Promise(resolve => {
-      resolve();
-    });
+    return Promise.resolve();
   }
 }
 
