@@ -1,6 +1,8 @@
 [ignore]
 .*/__tests__/.*
 .*/node_modules/findup/.*
+.*/node_modules/config-chain/.*
+.*/node_modules/eslint-plugin-jsx-a11y/.*
 
 [libs]
 ./node_modules/fbjs/flow/lib
