@@ -22,8 +22,8 @@
   },
   "config": {
     "ghooks": {
-      "pre-commit": "# npm run lint:build:test",
-      "pre-push": "# npm run lint:build:test"
+      "pre-commit": "npm run lint:build:test",
+      "pre-push": "npm run lint:build:test"
     }
   },
   "scripts": {
