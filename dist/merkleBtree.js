@@ -2470,22 +2470,8 @@ var IPFSStorage = function () {
   };
 
   IPFSStorage.prototype.get = function get(key) {
-    return this.ipfs.files.cat(key).then(function (stream) {
-      return new Promise(function (resolve, reject) {
-        var res = "";
-
-        stream.on("data", function (chunk) {
-          res += chunk.toString();
-        });
-
-        stream.on("error", function (err) {
-          reject(err);
-        });
-
-        stream.on("end", function () {
-          resolve(res);
-        });
-      });
+    return this.ipfs.files.cat(key).then(function (file) {
+      return file.toString("utf8");
     });
   };
 

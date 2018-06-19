@@ -11,22 +11,8 @@ class IPFSStorage {
 
   get(key) {
     return this.ipfs.files.cat(key)
-      .then(stream => {
-        return new Promise((resolve, reject) => {
-          let res = ``;
-
-          stream.on(`data`, function (chunk) {
-            res += chunk.toString();
-          });
-
-          stream.on(`error`, function (err) {
-            reject(err);
-          });
-
-          stream.on(`end`, function () {
-            resolve(res);
-          });
-        });
+      .then(file => {
+        return file.toString(`utf8`);
       });
   }
 
