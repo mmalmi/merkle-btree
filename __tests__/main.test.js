@@ -300,9 +300,19 @@ describe(`merkle-btree`, () => {
             expect(res.length).toEqual(list.length);
           });
       });
+
+      it(`can be converted back with toSortedList`, () => {
+        return btree.toSortedList()
+          .then(res => {
+            console.log(`res`, res);
+            expect(res).toBeInstanceOf(Array);
+            expect(res.length).toEqual(list.length);
+          });
+      });
     });
   });
 
+  /*
   describe(`GUNStorage`, () => {
     const testEntryCount = 1000;
     const maxChildren = 10;
@@ -357,6 +367,7 @@ describe(`merkle-btree`, () => {
       });
     });
   });
+  */
 
   describe(`IPFSStorage`, () => {
     const storage = new IPFSStorage(ipfs);

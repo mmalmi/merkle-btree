@@ -412,6 +412,28 @@ var TreeNode = function () {
     return JSON.stringify({ leftChildHash: this.leftChildHash, keys: this.keys });
   };
 
+  TreeNode.prototype.toSortedList = function toSortedList(storage) {
+    var list = [];
+    var _this = this;
+    function getNextVal(i) {
+      if (i >= _this.keys.length) {
+        return Promise.resolve(list);
+      }
+      if (_this.keys[i].targetHash) {
+        return storage.get(_this.keys[i].targetHash).then(function (serialized) {
+          return TreeNode.deserialize(serialized, _this.keys[i].targetHash).toSortedList();
+        }).then(function (children) {
+          list = list.concat(children);
+          return getNextVal(i + 1);
+        });
+      } else if (_this.keys[i].key.length) {
+        list.push(_this.keys[i]);
+      }
+      return getNextVal(i + 1);
+    }
+    return getNextVal(0);
+  };
+
   TreeNode.deserialize = function deserialize(data, hash) {
     data = JSON.parse(data);
     return new TreeNode(data.leftChildHash, data.keys, hash);
@@ -512,6 +534,10 @@ var MerkleBTree = function () {
 
   MerkleBTree.prototype.size = function size() {
     return this.rootNode.size(this.storage);
+  };
+
+  MerkleBTree.prototype.toSortedList = function toSortedList() {
+    return this.rootNode.toSortedList(this.storage);
   };
 
   MerkleBTree.getByHash = function getByHash(hash, storage, maxChildren) {

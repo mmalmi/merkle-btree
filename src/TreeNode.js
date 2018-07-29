@@ -362,6 +362,28 @@ class TreeNode {
     return JSON.stringify({leftChildHash: this.leftChildHash, keys: this.keys});
   }
 
+  toSortedList(storage) {
+    let list = [];
+    const _this = this;
+    function getNextVal(i) {
+      if (i >= _this.keys.length) {
+        return Promise.resolve(list);
+      }
+      if (_this.keys[i].targetHash) {
+        return storage.get(_this.keys[i].targetHash).then(serialized => {
+          return TreeNode.deserialize(serialized, _this.keys[i].targetHash).toSortedList();
+        }).then(children => {
+          list = list.concat(children);
+          return getNextVal(i + 1);
+        });
+      } else if (_this.keys[i].key.length) {
+        list.push(_this.keys[i]);
+      }
+      return getNextVal(i + 1);
+    }
+    return getNextVal(0);
+  }
+
   static deserialize(data, hash) {
     data = JSON.parse(data);
     return new TreeNode(data.leftChildHash, data.keys, hash);
