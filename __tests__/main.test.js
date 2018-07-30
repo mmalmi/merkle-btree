@@ -18,11 +18,18 @@ const satoshi = {
 
 function runTests(testEntryCount, maxChildren, btree) {
   let hash, treeSize;
+  it(`can be saved`, () => {
+    return btree.save().then(hash => {
+      expect(typeof hash).toBe(`string`);
+      expect(hash.length).toBeGreaterThan(0);
+    });
+  });
 
   it(`inserts a value and returns a hash`, () => {
     return btree.put(`Satoshi`, satoshi)
       .then(hash => {
         expect(typeof hash).toBe(`string`);
+        expect(hash.length).toBeGreaterThan(0);
       });
   });
 

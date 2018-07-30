@@ -48,6 +48,10 @@ class MerkleBTree {
     return this.rootNode.toSortedList(this.storage);
   }
 
+  save() {
+    return this.storage.put(this.rootNode.serialize());
+  }
+
   static getByHash(hash, storage, maxChildren) {
     return storage.get(hash).then(data => {
       const rootNode = TreeNode.deserialize(data);

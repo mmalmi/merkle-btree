@@ -540,6 +540,10 @@ var MerkleBTree = function () {
     return this.rootNode.toSortedList(this.storage);
   };
 
+  MerkleBTree.prototype.save = function save() {
+    return this.storage.put(this.rootNode.serialize());
+  };
+
   MerkleBTree.getByHash = function getByHash(hash, storage, maxChildren) {
     return storage.get(hash).then(function (data) {
       var rootNode = TreeNode.deserialize(data);
