@@ -153,6 +153,13 @@ class TreeNode {
     return iterate(reverse ? this.keys.length - 1 : 0);
   }
 
+  save(storage) {
+    return storage.put(this.serialize()).then(hash => {
+      this.hash = hash;
+      return hash;
+    });
+  }
+
   _getLeafInsertIndex(key) {
     const {index, exists} = this._getNextSmallestIndex(key);
     let leafInsertIndex = index + 1;
@@ -190,12 +197,18 @@ class TreeNode {
     const rightChild = new TreeNode(this.keys[medianIndex].targetHash, rightSet);
     const putRightChild = storage.put(rightChild.serialize());
 
-    const remove = storage.remove(this.hash);
-    return Promise.all([putLeftChild, putRightChild, remove])
+    return Promise.all([putLeftChild, putRightChild, this._removeIfNotEmpty(storage)])
       .then(([leftChildHash, rightChildHash]) => {
         const rightChildElement = new KeyElement(median.key, null, rightChildHash);
         return new TreeNode(leftChildHash, [rightChildElement]);
       });
+  }
+
+  _removeIfNotEmpty(storage) { // TODO: this breaks stuff when multiple trees use the same storage
+    if (this.keys.length > 0) {
+      return storage.remove(this.hash);
+    }
+    return Promise.resolve();
   }
 
   _saveToLeafNode(key, value, storage, maxChildren) {
@@ -203,7 +216,7 @@ class TreeNode {
     const {leafInsertIndex, exists} = this._getLeafInsertIndex(key);
     if (exists) {
       this.keys[leafInsertIndex] = keyElement;
-      return storage.remove(this.hash)
+      return this._removeIfNotEmpty(storage)
         .then(() => {
           return storage.put(this.serialize());
         })
@@ -214,7 +227,7 @@ class TreeNode {
 
     this.keys.splice(leafInsertIndex, 0, keyElement);
     if (this.keys.length < maxChildren) {
-      return storage.remove(this.hash)
+      return this._removeIfNotEmpty(storage)
         .then(() => {
           return storage.put(this.serialize());
         })
@@ -239,8 +252,11 @@ class TreeNode {
           this.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
 
           if (this.keys.length < maxChildren) {
-            storage.remove(this.hash);
-            return storage.put(this.serialize()).then(hash => {
+            return this._removeIfNotEmpty(storage)
+            .then(() => {
+              return storage.put(this.serialize());
+            })
+            .then(hash => {
               return new TreeNode(this.leftChildHash, this.keys, hash);
             });
           }
@@ -249,7 +265,10 @@ class TreeNode {
         // The child element was not split
         this.keys[index] = new KeyElement(this.keys[index].key, null, modifiedChild.hash);
         storage.remove(this.hash);
-        return storage.put(this.serialize()).then(hash => {
+        return this._removeIfNotEmpty(storage).then(() => {
+          storage.put(this.serialize());
+        })
+        .then(hash => {
           return new TreeNode(this.leftChildHash, this.keys, hash);
         });
       });

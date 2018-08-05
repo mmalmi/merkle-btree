@@ -1,30 +1,36 @@
 
-import {createHash} from 'crypto';
+import {randomBytes} from 'crypto';
 
 class GUNStorage {
   constructor(gun) {
     this.gun = gun.get(`identifi`);
   }
 
-  put(value) {
-    const sha256 = createHash(`sha256`);
-    sha256.update(value);
-    const hash = sha256.digest(`base64`);
-    return new Promise((resolve, reject) => {
-      this.gun.get(hash).put(value, ack => {
-        if (ack.err) {
-          return reject(ack.err);
-        }
-        resolve(hash);
+  put(value, name) {
+    return new Promise(resolve => {
+      randomBytes(32, (err, buffer) => {
+        const key = name || buffer.toString(`base64`);
+        this.gun.get(key).put(value, ack => {
+          console.log(`waiting for ack`);
+          if (ack.err) {
+            console.log(`ack error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+            return;
+            // return reject(ack.err);
+          }
+          console.log(`ack success!`, key);
+        });
+        resolve(key);
       });
     });
   }
 
   get(hash) {
     return new Promise((resolve, reject) => {
-      this.gun.get(hash).once(data => {
+      this.gun.get(hash).on((data, key, msg, event) => {
+        event.off();
         if (!data) {
-          return reject(`Error: Hash cannot be found at ${hash}`);
+          return;
+          //return reject(`Error: Hash cannot be found at ${hash}`);
         }
         resolve(data);
       });
@@ -32,7 +38,14 @@ class GUNStorage {
   }
 
   remove(key) {
-    return Promise.resolve(key);
+    return new Promise((resolve, reject) => {
+      this.gun.get(key).put(null, ack => {
+        if (ack.err) {
+          return reject(ack.err);
+        }
+      });
+      resolve(key);
+    });
   }
 
   clear() {

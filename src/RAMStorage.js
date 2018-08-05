@@ -1,4 +1,4 @@
-import {createHash} from 'crypto';
+import {randomBytes} from 'crypto';
 
 class RAMStorage {
   constructor() {
@@ -7,11 +7,11 @@ class RAMStorage {
 
   put(value) {
     return new Promise(resolve => {
-      const sha256 = createHash(`sha256`);
-      sha256.update(value);
-      const hash = sha256.digest(`base64`);
-      this.storage[hash] = value;
-      resolve(hash);
+      randomBytes(32, (err, buffer) => {
+        const key = buffer.toString(`base64`);
+        this.storage[key] = value;
+        resolve(key);
+      });
     });
   }
 

@@ -192,6 +192,15 @@ var TreeNode = function () {
     return iterate(reverse ? this.keys.length - 1 : 0);
   };
 
+  TreeNode.prototype.save = function save(storage) {
+    var _this2 = this;
+
+    return storage.put(this.serialize()).then(function (hash) {
+      _this2.hash = hash;
+      return hash;
+    });
+  };
+
   TreeNode.prototype._getLeafInsertIndex = function _getLeafInsertIndex(key) {
     var _getNextSmallestIndex2 = this._getNextSmallestIndex(key),
         index = _getNextSmallestIndex2.index,
@@ -234,8 +243,7 @@ var TreeNode = function () {
     var rightChild = new TreeNode(this.keys[medianIndex].targetHash, rightSet);
     var putRightChild = storage.put(rightChild.serialize());
 
-    var remove = storage.remove(this.hash);
-    return Promise.all([putLeftChild, putRightChild, remove]).then(function (_ref2) {
+    return Promise.all([putLeftChild, putRightChild, this._removeIfNotEmpty(storage)]).then(function (_ref2) {
       var leftChildHash = _ref2[0],
           rightChildHash = _ref2[1];
 
@@ -244,8 +252,16 @@ var TreeNode = function () {
     });
   };
 
+  TreeNode.prototype._removeIfNotEmpty = function _removeIfNotEmpty(storage) {
+    // TODO: this breaks stuff when multiple trees use the same storage
+    if (this.keys.length > 0) {
+      return storage.remove(this.hash);
+    }
+    return Promise.resolve();
+  };
+
   TreeNode.prototype._saveToLeafNode = function _saveToLeafNode(key, value, storage, maxChildren) {
-    var _this2 = this;
+    var _this3 = this;
 
     var keyElement = new KeyElement(key, value, null);
 
@@ -255,26 +271,26 @@ var TreeNode = function () {
 
     if (exists) {
       this.keys[leafInsertIndex] = keyElement;
-      return storage.remove(this.hash).then(function () {
-        return storage.put(_this2.serialize());
+      return this._removeIfNotEmpty(storage).then(function () {
+        return storage.put(_this3.serialize());
       }).then(function (hash) {
-        return new TreeNode(_this2.leftChildHash, _this2.keys, hash);
+        return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
       });
     }
 
     this.keys.splice(leafInsertIndex, 0, keyElement);
     if (this.keys.length < maxChildren) {
-      return storage.remove(this.hash).then(function () {
-        return storage.put(_this2.serialize());
+      return this._removeIfNotEmpty(storage).then(function () {
+        return storage.put(_this3.serialize());
       }).then(function (hash) {
-        return new TreeNode(_this2.leftChildHash, _this2.keys, hash);
+        return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
       });
     }
     return this._splitNode(storage);
   };
 
   TreeNode.prototype._saveToBranchNode = function _saveToBranchNode(key, value, storage, maxChildren) {
-    var _this3 = this;
+    var _this4 = this;
 
     var _getNextSmallestIndex3 = this._getNextSmallestIndex(key),
         index = _getNextSmallestIndex3.index;
@@ -285,22 +301,25 @@ var TreeNode = function () {
     }).then(function (modifiedChild) {
       if (!modifiedChild.hash) {
         // we split a child and need to add the median to our keys
-        _this3.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
-        _this3.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
+        _this4.keys[index] = new KeyElement(nextSmallest.key, null, modifiedChild.keys[0].targetHash);
+        _this4.keys.splice(index + 1, 0, modifiedChild.keys[modifiedChild.keys.length - 1]);
 
-        if (_this3.keys.length < maxChildren) {
-          storage.remove(_this3.hash);
-          return storage.put(_this3.serialize()).then(function (hash) {
-            return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
+        if (_this4.keys.length < maxChildren) {
+          return _this4._removeIfNotEmpty(storage).then(function () {
+            return storage.put(_this4.serialize());
+          }).then(function (hash) {
+            return new TreeNode(_this4.leftChildHash, _this4.keys, hash);
           });
         }
-        return _this3._splitNode(storage);
+        return _this4._splitNode(storage);
       }
       // The child element was not split
-      _this3.keys[index] = new KeyElement(_this3.keys[index].key, null, modifiedChild.hash);
-      storage.remove(_this3.hash);
-      return storage.put(_this3.serialize()).then(function (hash) {
-        return new TreeNode(_this3.leftChildHash, _this3.keys, hash);
+      _this4.keys[index] = new KeyElement(_this4.keys[index].key, null, modifiedChild.hash);
+      storage.remove(_this4.hash);
+      return _this4._removeIfNotEmpty(storage).then(function () {
+        storage.put(_this4.serialize());
+      }).then(function (hash) {
+        return new TreeNode(_this4.leftChildHash, _this4.keys, hash);
       });
     });
   };
@@ -313,7 +332,7 @@ var TreeNode = function () {
   };
 
   TreeNode.prototype.delete = function _delete(key, storage) {
-    var _this4 = this;
+    var _this5 = this;
 
     var nextKey = this.keys[0];
     var i = void 0;
@@ -339,9 +358,9 @@ var TreeNode = function () {
       this.keys.splice(i, 1);
     }
     return q.then(function () {
-      return storage.put(_this4.serialize());
+      return storage.put(_this5.serialize());
     }).then(function (hash) {
-      return new TreeNode(_this4.leftChildHash, _this4.keys, hash);
+      return new TreeNode(_this5.leftChildHash, _this5.keys, hash);
     });
   };
 
@@ -541,7 +560,7 @@ var MerkleBTree = function () {
   };
 
   MerkleBTree.prototype.save = function save() {
-    return this.storage.put(this.rootNode.serialize());
+    return this.rootNode.save(this.storage);
   };
 
   MerkleBTree.getByHash = function getByHash(hash, storage, maxChildren) {
@@ -2506,6 +2525,9 @@ var IPFSStorage = function () {
   };
 
   IPFSStorage.prototype.remove = function remove(key) {
+    if (this.ipfs.files.rm) {
+      return this.ipfs.files.rm(key);
+    }
     return Promise.resolve(key);
   };
 
@@ -2529,11 +2551,11 @@ var RAMStorage = function () {
     var _this = this;
 
     return new Promise(function (resolve) {
-      var sha256 = crypto.createHash('sha256');
-      sha256.update(value);
-      var hash = sha256.digest('base64');
-      _this.storage[hash] = value;
-      resolve(hash);
+      crypto.randomBytes(32, function (err, buffer) {
+        var key = buffer.toString('base64');
+        _this.storage[key] = value;
+        resolve(key);
+      });
     });
   };
 
@@ -2567,6 +2589,70 @@ var RAMStorage = function () {
 }();
 
 function _classCallCheck$4(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var GUNStorage = function () {
+  function GUNStorage(gun) {
+    _classCallCheck$4(this, GUNStorage);
+
+    this.gun = gun.get('identifi');
+  }
+
+  GUNStorage.prototype.put = function put(value) {
+    var _this = this;
+
+    return new Promise(function (resolve) {
+      crypto.randomBytes(32, function (err, buffer) {
+        var key = buffer.toString('base64');
+        _this.gun.get(key).put(value, function (ack) {
+          console.log('waiting for ack');
+          if (ack.err) {
+            console.log('ack error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            return;
+            // return reject(ack.err);
+          }
+          console.log('ack success!', key);
+        });
+        resolve(key);
+      });
+    });
+  };
+
+  GUNStorage.prototype.get = function get(hash) {
+    var _this2 = this;
+
+    return new Promise(function (resolve, reject) {
+      _this2.gun.get(hash).on(function (data, key, msg, event) {
+        event.off();
+        if (!data) {
+          return;
+          //return reject(`Error: Hash cannot be found at ${hash}`);
+        }
+        resolve(data);
+      });
+    });
+  };
+
+  GUNStorage.prototype.remove = function remove(key) {
+    var _this3 = this;
+
+    return new Promise(function (resolve, reject) {
+      _this3.gun.get(key).put(null, function (ack) {
+        if (ack.err) {
+          return reject(ack.err);
+        }
+      });
+      resolve(key);
+    });
+  };
+
+  GUNStorage.prototype.clear = function clear() {
+    return Promise.resolve();
+  };
+
+  return GUNStorage;
+}();
+
+function _classCallCheck$5(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var isNode = false;
 try {
@@ -2629,7 +2715,7 @@ var IPFSGatewayStorage = function () {
   function IPFSGatewayStorage() {
     var apiRoot = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
 
-    _classCallCheck$4(this, IPFSGatewayStorage);
+    _classCallCheck$5(this, IPFSGatewayStorage);
 
     this.apiRoot = apiRoot;
   }
@@ -2657,7 +2743,8 @@ var index = {
   TreeNode: TreeNode,
   RAMStorage: RAMStorage,
   IPFSStorage: IPFSStorage,
-  IPFSGatewayStorage: IPFSGatewayStorage
+  IPFSGatewayStorage: IPFSGatewayStorage,
+  GUNStorage: GUNStorage
 };
 
 return index;

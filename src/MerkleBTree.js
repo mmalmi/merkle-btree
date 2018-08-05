@@ -49,7 +49,7 @@ class MerkleBTree {
   }
 
   save() {
-    return this.storage.put(this.rootNode.serialize());
+    return this.rootNode.save(this.storage);
   }
 
   static getByHash(hash, storage, maxChildren) {
