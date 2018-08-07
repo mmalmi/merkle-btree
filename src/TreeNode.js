@@ -156,7 +156,7 @@ class TreeNode {
   save(storage) {
     return storage.put(this.serialize()).then(hash => {
       this.hash = hash;
-      return hash;
+      return this.hash;
     });
   }
 
@@ -205,7 +205,7 @@ class TreeNode {
   }
 
   _removeIfNotEmpty(storage) { // TODO: this breaks stuff when multiple trees use the same storage
-    if (this.keys.length > 0) {
+    if (this.hash && this.keys.length > 0) {
       return storage.remove(this.hash);
     }
     return Promise.resolve();

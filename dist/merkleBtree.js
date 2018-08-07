@@ -197,7 +197,7 @@ var TreeNode = function () {
 
     return storage.put(this.serialize()).then(function (hash) {
       _this2.hash = hash;
-      return hash;
+      return _this2.hash;
     });
   };
 
@@ -254,7 +254,7 @@ var TreeNode = function () {
 
   TreeNode.prototype._removeIfNotEmpty = function _removeIfNotEmpty(storage) {
     // TODO: this breaks stuff when multiple trees use the same storage
-    if (this.keys.length > 0) {
+    if (this.hash && this.keys.length > 0) {
       return storage.remove(this.hash);
     }
     return Promise.resolve();
@@ -2524,11 +2524,9 @@ var IPFSStorage = function () {
     });
   };
 
-  IPFSStorage.prototype.remove = function remove(key) {
-    if (this.ipfs.files.rm) {
-      return this.ipfs.files.rm(key);
-    }
-    return Promise.resolve(key);
+  IPFSStorage.prototype.remove = function remove() {
+    // Apparently js-ipfs files are autoremoved if they are not pinned
+    return Promise.resolve();
   };
 
   IPFSStorage.prototype.clear = function clear() {
@@ -2597,12 +2595,12 @@ var GUNStorage = function () {
     this.gun = gun.get('identifi');
   }
 
-  GUNStorage.prototype.put = function put(value) {
+  GUNStorage.prototype.put = function put(value, name) {
     var _this = this;
 
     return new Promise(function (resolve) {
       crypto.randomBytes(32, function (err, buffer) {
-        var key = buffer.toString('base64');
+        var key = name || buffer.toString('base64');
         _this.gun.get(key).put(value, function (ack) {
           console.log('waiting for ack');
           if (ack.err) {
@@ -2620,7 +2618,7 @@ var GUNStorage = function () {
   GUNStorage.prototype.get = function get(hash) {
     var _this2 = this;
 
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
       _this2.gun.get(hash).on(function (data, key, msg, event) {
         event.off();
         if (!data) {

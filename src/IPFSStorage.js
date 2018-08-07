@@ -16,11 +16,9 @@ class IPFSStorage {
       });
   }
 
-  remove(key) {
-    if (this.ipfs.files.rm) {
-      return this.ipfs.files.rm(key);
-    }
-    return Promise.resolve(key);
+  remove() {
+    // Apparently js-ipfs files are autoremoved if they are not pinned
+    return Promise.resolve();
   }
 
   clear() {

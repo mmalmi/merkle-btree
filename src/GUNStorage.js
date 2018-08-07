@@ -25,7 +25,7 @@ class GUNStorage {
   }
 
   get(hash) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.gun.get(hash).on((data, key, msg, event) => {
         event.off();
         if (!data) {
